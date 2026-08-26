@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { db, now } from "@/db/client";
+import { getDb, now } from "@/db/client";
 import type { BookingStatus } from "@/db/schema";
 import { services as fallbackServices, type Service } from "@/lib/shop";
 
@@ -42,7 +42,7 @@ export type BookingInput = z.infer<typeof bookingSchema>;
 /** Reads the menu from the database, falling back to the static list. */
 export async function listServices(): Promise<Service[]> {
   try {
-    const rows = await db
+    const rows = await getDb()
       .selectFrom("services")
       .selectAll()
       .where("is_active", "=", 1)
@@ -72,7 +72,12 @@ export async function listServices(): Promise<Service[]> {
 }
 
 export async function listBarbers() {
-  return db.selectFrom("barbers").selectAll().where("is_active", "=", 1).orderBy("rank").execute();
+  return getDb()
+    .selectFrom("barbers")
+    .selectAll()
+    .where("is_active", "=", 1)
+    .orderBy("rank")
+    .execute();
 }
 
 const RATE_LIMIT_WINDOW_MINUTES = 5;
@@ -81,7 +86,7 @@ const RATE_LIMIT_WINDOW_MINUTES = 5;
 export async function isRateLimited(phone: string): Promise<boolean> {
   const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60_000).toISOString();
 
-  const recent = await db
+  const recent = await getDb()
     .selectFrom("bookings")
     .select("id")
     .where("customer_phone", "=", phone)
@@ -95,7 +100,7 @@ export async function isRateLimited(phone: string): Promise<boolean> {
 export async function createBooking(input: BookingInput): Promise<number> {
   const timestamp = now();
 
-  const inserted = await db
+  const inserted = await getDb()
     .insertInto("bookings")
     .values({
       customer_name: input.name,
@@ -134,7 +139,7 @@ export type Booking = {
 };
 
 export async function listBookings(status?: BookingStatus): Promise<Booking[]> {
-  let query = db.selectFrom("bookings").selectAll().orderBy("created_at", "desc").limit(200);
+  let query = getDb().selectFrom("bookings").selectAll().orderBy("created_at", "desc").limit(200);
   if (status) query = query.where("status", "=", status);
 
   const rows = await query.execute();
@@ -157,7 +162,11 @@ export async function listBookings(status?: BookingStatus): Promise<Booking[]> {
 
 /** One booking, as a plain object. Null when the id does not exist. */
 export async function getBooking(id: number): Promise<Booking | null> {
-  const row = await db.selectFrom("bookings").selectAll().where("id", "=", id).executeTakeFirst();
+  const row = await getDb()
+    .selectFrom("bookings")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
 
   if (!row) return null;
 
@@ -178,13 +187,17 @@ export async function getBooking(id: number): Promise<Booking | null> {
 }
 
 export async function setBookingEventId(id: number, eventId: string | null): Promise<void> {
-  await db.updateTable("bookings").set({ google_event_id: eventId }).where("id", "=", id).execute();
+  await getDb()
+    .updateTable("bookings")
+    .set({ google_event_id: eventId })
+    .where("id", "=", id)
+    .execute();
 }
 
 export async function countBookingsByStatus(): Promise<Record<BookingStatus, number>> {
-  const rows = await db
+  const rows = await getDb()
     .selectFrom("bookings")
-    .select(["status", db.fn.countAll<number>().as("count")])
+    .select(["status", getDb().fn.countAll<number>().as("count")])
     .groupBy("status")
     .execute();
 
@@ -203,7 +216,7 @@ export async function updateBookingStatus(
   status: BookingStatus,
   staffNote?: string,
 ): Promise<void> {
-  await db
+  await getDb()
     .updateTable("bookings")
     .set({
       status,
@@ -220,7 +233,7 @@ export async function rescheduleBooking(
   time: string,
   staffNote?: string,
 ): Promise<void> {
-  await db
+  await getDb()
     .updateTable("bookings")
     .set({
       requested_date: date,
@@ -239,7 +252,7 @@ export async function rescheduleBooking(
  */
 export async function listGalleryPhotoIds(): Promise<string[] | null> {
   try {
-    const rows = await db
+    const rows = await getDb()
       .selectFrom("gallery_photos")
       .select("photo_id")
       .where("is_visible", "=", 1)

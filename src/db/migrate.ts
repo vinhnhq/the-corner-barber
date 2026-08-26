@@ -9,7 +9,7 @@
 import { sql } from "kysely";
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { db } from "./client";
+import { getDb } from "./client";
 
 type Migration = { name: string; up: () => Promise<void> };
 
@@ -32,7 +32,7 @@ const migrations: Migration[] = [
           includes_en TEXT    NOT NULL DEFAULT '[]',
           is_active   INTEGER NOT NULL DEFAULT 1
         )
-      `.execute(db);
+      `.execute(getDb());
 
       await sql`
         CREATE TABLE barbers (
@@ -44,7 +44,7 @@ const migrations: Migration[] = [
           rank      INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1
         )
-      `.execute(db);
+      `.execute(getDb());
 
       await sql`
         CREATE TABLE bookings (
@@ -62,17 +62,17 @@ const migrations: Migration[] = [
           created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
           updated_at     TEXT    NOT NULL DEFAULT (datetime('now'))
         )
-      `.execute(db);
+      `.execute(getDb());
 
       // The admin list is always "newest first, optionally filtered by status",
       // and the rate limiter looks up recent rows for one phone number.
       await sql`CREATE INDEX bookings_status_created ON bookings (status, created_at DESC)`.execute(
-        db,
+        getDb(),
       );
       await sql`CREATE INDEX bookings_phone_created ON bookings (customer_phone, created_at DESC)`.execute(
-        db,
+        getDb(),
       );
-      await sql`CREATE INDEX bookings_date ON bookings (requested_date)`.execute(db);
+      await sql`CREATE INDEX bookings_date ON bookings (requested_date)`.execute(getDb());
 
       await sql`
         CREATE TABLE shop_settings (
@@ -80,7 +80,7 @@ const migrations: Migration[] = [
           value      TEXT NOT NULL,
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-      `.execute(db);
+      `.execute(getDb());
 
       await sql`
         CREATE TABLE gallery_photos (
@@ -89,7 +89,7 @@ const migrations: Migration[] = [
           rank       INTEGER NOT NULL DEFAULT 0,
           is_visible INTEGER NOT NULL DEFAULT 1
         )
-      `.execute(db);
+      `.execute(getDb());
     },
   },
   {
@@ -98,7 +98,7 @@ const migrations: Migration[] = [
       // Set once the booking is confirmed and an event exists on the shop's
       // calendar. Null means "no event" — either not confirmed yet, or the
       // calendar integration is not configured.
-      await sql`ALTER TABLE bookings ADD COLUMN google_event_id TEXT`.execute(db);
+      await sql`ALTER TABLE bookings ADD COLUMN google_event_id TEXT`.execute(getDb());
     },
   },
 ];
@@ -117,9 +117,9 @@ async function main() {
       name    TEXT PRIMARY KEY,
       ran_at  TEXT NOT NULL DEFAULT (datetime('now'))
     )
-  `.execute(db);
+  `.execute(getDb());
 
-  const done = await sql<{ name: string }>`SELECT name FROM _migrations`.execute(db);
+  const done = await sql<{ name: string }>`SELECT name FROM _migrations`.execute(getDb());
   const applied = new Set(done.rows.map((r) => r.name));
 
   for (const migration of migrations) {
@@ -128,11 +128,11 @@ async function main() {
       continue;
     }
     await migration.up();
-    await sql`INSERT INTO _migrations (name) VALUES (${migration.name})`.execute(db);
+    await sql`INSERT INTO _migrations (name) VALUES (${migration.name})`.execute(getDb());
     console.info(`  + ${migration.name}`);
   }
 
-  await db.destroy();
+  await getDb().destroy();
 }
 
 await main();

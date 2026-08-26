@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { toggleGalleryPhoto } from "@/app/actions/admin";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
 import { photos, type PhotoId } from "@/lib/photos";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export default async function AdminGalleryPage() {
   assertAdminEnabled();
 
-  const rows = await db.selectFrom("gallery_photos").selectAll().execute();
+  const rows = await getDb().selectFrom("gallery_photos").selectAll().execute();
   const visibility = new Map(rows.map((r) => [r.photo_id, r.is_visible === 1]));
 
   const all = Object.entries(photos) as [PhotoId, (typeof photos)[PhotoId]][];

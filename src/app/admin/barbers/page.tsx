@@ -2,14 +2,14 @@ import Image from "next/image";
 import { updateBarber } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
 import { photos, type PhotoId } from "@/lib/photos";
 
 export default async function AdminBarbersPage() {
   assertAdminEnabled();
 
-  const barbers = await db.selectFrom("barbers").selectAll().orderBy("rank").execute();
+  const barbers = await getDb().selectFrom("barbers").selectAll().orderBy("rank").execute();
 
   return (
     <div className="flex flex-col gap-8">

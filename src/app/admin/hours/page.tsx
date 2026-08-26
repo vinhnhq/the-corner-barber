@@ -1,7 +1,7 @@
 import { updateHours } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
 import { shop } from "@/lib/shop";
 
@@ -12,7 +12,7 @@ type Hour = { day: number; open: string; close: string };
 export default async function AdminHoursPage() {
   assertAdminEnabled();
 
-  const row = await db
+  const row = await getDb()
     .selectFrom("shop_settings")
     .select("value")
     .where("key", "=", "hours")

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, now } from "@/db/client";
+import { getDb, now } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
 import {
   createCalendarEvent,
@@ -145,7 +145,7 @@ export async function updateService(formData: FormData): Promise<void> {
 
   if (!slug || !nameVi || !nameEn || !price.success || !minutes.success) return;
 
-  await db
+  await getDb()
     .updateTable("services")
     .set({
       name_vi: nameVi,
@@ -171,7 +171,7 @@ export async function updateBarber(formData: FormData): Promise<void> {
 
   if (!slug || !nameVi || !nameEn) return;
 
-  await db
+  await getDb()
     .updateTable("barbers")
     .set({ name_vi: nameVi, name_en: nameEn, is_active: isActive })
     .where("slug", "=", slug)
@@ -202,7 +202,7 @@ export async function updateHours(formData: FormData): Promise<void> {
   if (!parsed.success) return;
 
   const value = JSON.stringify(parsed.data);
-  await db
+  await getDb()
     .insertInto("shop_settings")
     .values({ key: "hours", value, updated_at: now() })
     .onConflict((oc) => oc.column("key").doUpdateSet({ value, updated_at: now() }))
@@ -219,7 +219,7 @@ export async function toggleGalleryPhoto(formData: FormData): Promise<void> {
   const visible = formData.get("visible") === "true" ? 1 : 0;
   if (!photoId) return;
 
-  await db
+  await getDb()
     .insertInto("gallery_photos")
     .values({ photo_id: photoId, rank: 0, is_visible: visible })
     .onConflict((oc) => oc.column("photo_id").doUpdateSet({ is_visible: visible }))

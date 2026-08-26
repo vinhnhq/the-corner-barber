@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { listBarbers, listServices } from "@/lib/bookings";
 import { shopNowMinutes } from "@/lib/appointment-time";
 import { slotTimes, timeToMinutes } from "@/lib/slots";
@@ -28,7 +28,7 @@ type Interval = { start: number; end: number; barber: string };
 
 async function bookedIntervals(date: string): Promise<Interval[]> {
   const [rows, services] = await Promise.all([
-    db
+    getDb()
       .selectFrom("bookings")
       .select(["requested_time", "service_slug", "barber_slug"])
       .where("requested_date", "=", date)

@@ -9,13 +9,13 @@
  *
  * Run: bun run db:seed
  */
-import { db, now } from "./client";
+import { getDb, now } from "./client";
 import { photosInSlot } from "../lib/photos";
 import { barbers, services, shop } from "../lib/shop";
 
 async function seedServices() {
   for (const service of services) {
-    await db
+    await getDb()
       .insertInto("services")
       .values({
         slug: service.slug,
@@ -50,7 +50,7 @@ async function seedServices() {
 
 async function seedBarbers() {
   for (const [index, barber] of barbers.entries()) {
-    await db
+    await getDb()
       .insertInto("barbers")
       .values({
         slug: barber.slug,
@@ -82,7 +82,7 @@ async function seedSettings() {
   };
 
   for (const [key, value] of Object.entries(settings)) {
-    await db
+    await getDb()
       .insertInto("shop_settings")
       .values({ key, value, updated_at: now() })
       .onConflict((oc) => oc.column("key").doUpdateSet({ value, updated_at: now() }))
@@ -99,7 +99,7 @@ async function seedGallery() {
   ];
 
   for (const [index, photo] of selection.entries()) {
-    await db
+    await getDb()
       .insertInto("gallery_photos")
       .values({ photo_id: photo.id, rank: index, is_visible: 1 })
       .onConflict((oc) => oc.column("photo_id").doUpdateSet({ rank: index }))
@@ -147,7 +147,7 @@ async function main() {
   await seedBarbers();
   await seedSettings();
   await seedGallery();
-  await db.destroy();
+  await getDb().destroy();
 }
 
 await main();

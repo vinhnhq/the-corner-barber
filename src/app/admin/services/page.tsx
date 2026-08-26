@@ -1,7 +1,7 @@
 import { updateService } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
 import { formatVnd } from "@/lib/shop";
 
@@ -14,7 +14,7 @@ const GROUP_LABEL: Record<string, string> = {
 export default async function AdminServicesPage() {
   assertAdminEnabled();
 
-  const services = await db
+  const services = await getDb()
     .selectFrom("services")
     .selectAll()
     .orderBy("group_name")
