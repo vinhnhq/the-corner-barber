@@ -169,7 +169,7 @@ number.
    not the local file.
 
    **Do not expect `vercel env pull` to supply the token.** Variables marked
-   *Sensitive* in Vercel are write-only — the pull returns them as empty
+   _Sensitive_ in Vercel are write-only — the pull returns them as empty
    strings, and an empty `DATABASE_AUTH_TOKEN` sends no auth header at all, so
    Turso answers `HTTP 401` and the failure looks like a bad token rather than
    a missing one. Paste the token from Turso into the file yourself.
