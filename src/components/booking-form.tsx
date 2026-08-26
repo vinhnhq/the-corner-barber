@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fill, type Dictionary, type Locale } from "@/lib/i18n/dictionaries";
 import { formatVnd, shop, type Service } from "@/lib/shop";
-import { slotTimes } from "@/lib/slots";
+import { slotTimes, type DateOption } from "@/lib/slots";
 import { cn } from "@/lib/utils";
 
 type BookingFormProps = {
@@ -30,6 +30,8 @@ type BookingFormProps = {
   barbers: { slug: string; nameVi: string; nameEn: string }[];
   /** `YYYY-MM-DD` in the shop's timezone, resolved on the server. */
   today: string;
+  /** Selectable days, laid out and formatted on the server. */
+  dates: DateOption[];
 };
 
 type State = BookingResult | null;
@@ -43,7 +45,7 @@ const DEFAULT_TIME = "09:00";
  */
 const FIELD_HEIGHT = "h-11 sm:h-9";
 
-export function BookingForm({ t, locale, services, barbers, today }: BookingFormProps) {
+export function BookingForm({ t, locale, services, barbers, today, dates }: BookingFormProps) {
   const formId = useId();
   const slots = useMemo(() => slotTimes(), []);
 
@@ -210,21 +212,25 @@ export function BookingForm({ t, locale, services, barbers, today }: BookingForm
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
+        {/* A list of days, not `<input type="date">`. See `bookableDates` —
+            the native control renders no calendar indicator on iOS Safari, so
+            it reads as a dead text box beside the fields that have one. */}
         <Field id={`${formId}-date`} label={t.booking.date} error={message("date")}>
-          <Input
+          <NativeSelect
             id={`${formId}-date`}
             name="date"
-            type="date"
             required
-            min={today}
             value={date}
             onChange={(e) => setDate(e.target.value)}
             aria-invalid={message("date") !== undefined}
-            className={cn(
-              FIELD_HEIGHT,
-              "[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-55 [&::-webkit-calendar-picker-indicator]:hover:opacity-100",
-            )}
-          />
+            className={FIELD_HEIGHT}
+          >
+            {dates.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
         </Field>
 
         <Field

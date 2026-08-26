@@ -39,6 +39,9 @@ login**; see the warning below.
 
 - **Services, prices, barbers, hours, gallery** — edit in `/admin`, or change
   `src/lib/shop.ts` and re-run `bun run db:seed`.
+- **Booking window** — `BOOKABLE_DAYS` in `src/lib/slots.ts` (30 days). The date
+  field is a list of days rather than `<input type="date">`, which renders no
+  calendar indicator on iOS Safari.
 - **Copy** — `src/lib/i18n/dictionaries.ts`. Vietnamese and English are typed
   against the same shape, so a missing string fails the build.
 - **Photos** — add or swap entries in `scripts/photos.manifest.ts`, then run

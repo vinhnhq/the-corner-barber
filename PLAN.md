@@ -110,6 +110,22 @@ nobody has pressed confirm yet. Past times on today's date drop out too.
 The lookup fails open — if it errors, every slot stays offerable. Staff vet
 every request anyway, so a lookup problem must not stop someone asking.
 
+### Phase 9 — deployment hardening
+
+Live at <https://the-corner-barber.vercel.app>, database on Turso.
+
+`/admin` is reachable in production behind HTTP Basic auth (`src/proxy.ts`),
+which matches `/admin` alone and leaves the public pages untouched. Production
+requires the opt-in **and** a password: either alone returns 404, so
+`ADMIN_ENABLED` can no longer expose customer data by itself. `bun run
+admin:local` remains the alternative — the admin on your machine against the
+production database, with no public exposure at all.
+
+The booking form no longer uses `<input type="date">`. The native control
+renders no calendar indicator on iOS Safari, so it read as a dead text box
+beside the fields that had one; it is a list of the next 30 days instead,
+generated on the server so the labels cannot differ between renders.
+
 ### Phase 6 — admin
 
 `/admin`: bookings with confirm / reschedule / done / cancel, plus editable
@@ -166,10 +182,14 @@ applies to the whole subtree, so nothing inside can be held out of it.
 - **`/admin` has no authentication.** Safe locally; it 404s in production
   unless `ADMIN_ENABLED=true` is set explicitly. Add real auth before ever
   turning that on.
-- **Mobile layout is still unverified in a browser.** The automation viewport
-  stays pinned (2560px in one session, 1440px in the next) regardless of window
-  size, so phone width has never actually been rendered. The responsive classes
-  are written; they have not been seen work.
+- **`/admin` has no user accounts.** Basic auth is a shared password: no
+  sessions, and no way to revoke one person without changing it for everyone.
+  Real login is the next planned piece of work.
+- **Bookings can only be made 30 days ahead**, a consequence of replacing the
+  native date input. Raise `BOOKABLE_DAYS` in `src/lib/slots.ts` if the shop
+  ever needs a longer horizon.
+- **Calendar notifications are still unverified** against a live Google
+  account — only the unconfigured code path has been exercised.
 - **No WebM/AV1 for the hero loop** — `ffmpeg` is not installed on this machine,
   so `avconvert` produced H.264 only. The clip is 4.6 MB and is therefore only
   fetched on viewports ≥768px, with no reduced-motion preference and no
@@ -193,3 +213,48 @@ price board (`P7250600.JPG`) and street signboard (`P7250619.JPG`):
 - **206 Võ Thị Đặng, Phường Tân Mỹ, TP. Hồ Chí Minh** · **0889 775 088** · EST. 2026
 - The price board writes the older street name, "206 Đường số 9, Tân Mỹ".
 - The signboard reads "BARBER SHOP", the interior sign "BARBERSHOP".
+
+## Retrospective
+
+Six things went wrong that were only ever going to be caught by looking, not by
+reading the diff. They are recorded because each represents a check worth
+repeating, not because they were unusual.
+
+**A green build proves less than it appears to.** `typecheck`, `lint` and
+`build` were clean while the repo was unbuildable from a fresh clone —
+`@hugeicons` was imported by six components and absent from `package.json`,
+surviving only in a stale `node_modules`. The same clean-clone check then
+caught the database client connecting at module scope, which would have failed
+the first Vercel build before the Turso variables existed. Cloning HEAD and
+building it is the only honest definition of "it builds".
+
+**Verify in the medium the user sees.** Cinzel has no Vietnamese subset at all
+— measuring `ỆỊỤỖƯĐ` against a fallback face showed identical widths — so every
+diacritic in the navigation fell through mid-word. The comment directly above
+that font said "never for Vietnamese copy", and it was then used for exactly
+that. Nothing automated noticed.
+
+**Mobile needed a different technique, not a promise to check later.** The
+automation viewport would not resize, and "unverified" was carried in the gaps
+list for three rounds. Rendering the page in a 390px `<iframe>` — where media
+queries evaluate against the iframe's box — worked immediately and found a
+gallery tile rendering 346×12px on phones, invisible the whole time.
+
+**Elegance is not a design goal.** A lazy `Proxy` around the database client
+looked clean and could not be made correct: Kysely keeps state in private class
+fields, so methods must be bound to the real instance, and binding destroys
+callable helpers that carry their own methods. Fixing ``sql`…`.execute(db)``
+broke `db.fn.countAll()` in the same edit. An explicit `getDb()` has none of
+those edges.
+
+**Fail closed, and test that it does.** `.env.example` shipped
+`ADMIN_ENABLED="true"`, so copying it into Vercel — the obvious move — switched
+on an admin with no login that lists every customer's phone number. The gate
+now needs two independent things, and the matrix was tested against a real
+production build. One of those tests was itself invalid: `.env.local` leaked a
+value into the run and made a case pass for the wrong reason.
+
+**Read the failure, not the symptom.** Turso answered `HTTP 401`, which reads
+as a rejected token. The token was empty — `vercel env pull` returns variables
+marked _Sensitive_ as empty strings, and an empty token sends no auth header at
+all. Vinh found that one.

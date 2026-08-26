@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/section-heading";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import { photos } from "@/lib/photos";
 import { shopToday, type Service } from "@/lib/shop";
+import { bookableDates } from "@/lib/slots";
 
 type BookingProps = {
   t: Dictionary;
@@ -41,6 +42,7 @@ export function Booking({ t, locale, services, barbers }: BookingProps) {
             services={services}
             barbers={barbers}
             today={shopToday()}
+            dates={bookableDates(shopToday(), locale)}
           />
         </Reveal>
       </div>
