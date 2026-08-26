@@ -107,6 +107,32 @@ the service account_ on their shared calendar. Each event sets explicit
 calendar's defaults, which should cover it — but this has not been tested
 against a real Google account, only against the unconfigured code path.
 
+## Using the admin
+
+`/admin` is disabled on the deployed site because it has no login. That does
+not mean the shop cannot use it — the admin is an ordinary page, and the
+database it reads is reachable from anywhere with the credentials. Run it on
+your machine against the live database:
+
+```bash
+# .env.turso — gitignored, and Vercel will not give you the token:
+# variables marked Sensitive there pull back as empty strings.
+DATABASE_URL="libsql://<db>-<org>.turso.io"
+DATABASE_AUTH_TOKEN="<from: turso db tokens create the-corner>"
+```
+
+```bash
+bun run admin:local     # → http://localhost:3000/admin
+```
+
+Changes made there are live: confirming a booking confirms the real one, and
+editing a price edits the real price. The script refuses to start against a
+local file or with an empty token, so it cannot quietly edit the wrong
+database.
+
+To put the admin on the public site instead, it needs real authentication
+first — see below.
+
 ## ⚠️ `/admin` has no authentication
 
 It was scoped as a local-only tool. The route 404s in production unless

@@ -16,7 +16,8 @@
     "assets:photos": "bun run scripts/process-photos.ts",
     "assets:video": "bun run scripts/process-video.ts",
     "db:seed:force": "bun run src/db/seed.ts --force",
-    "assets:icons": "bun run scripts/process-icons.ts"
+    "assets:icons": "bun run scripts/process-icons.ts",
+    "admin:local": "sh scripts/admin-local.sh"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.3.0",
