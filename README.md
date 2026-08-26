@@ -130,8 +130,28 @@ editing a price edits the real price. The script refuses to start against a
 local file or with an empty token, so it cannot quietly edit the wrong
 database.
 
-To put the admin on the public site instead, it needs real authentication
-first — see below.
+### On the deployed site
+
+`/admin` can also run on the live site, behind HTTP Basic auth. Set three
+variables in Vercel and redeploy:
+
+```bash
+ADMIN_ENABLED="true"
+ADMIN_PASSWORD="<a long random password>"
+ADMIN_USER="admin"           # optional
+```
+
+The browser then prompts once and remembers it for the session. The public
+site is untouched — the proxy only matches `/admin`.
+
+**This is not real authentication.** There are no accounts, no sessions, and
+no way to revoke one person without changing the password for everyone. It is
+the smallest honest thing that makes a single-operator admin safe to expose
+over HTTPS. Replace it with proper login before more people need access.
+
+Production needs **both** variables. Either alone leaves `/admin` returning
+404, so `ADMIN_ENABLED` on its own can never publish customer names and phone
+numbers — a combination that has already been got wrong once.
 
 ## ⚠️ `/admin` has no authentication
 

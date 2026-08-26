@@ -26,8 +26,8 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       {adminIsProductionExposed() && (
         <p className="flex items-center justify-center gap-2 bg-destructive px-4 py-2 text-center text-xs text-white">
           <AlertTriangle className="size-4 shrink-0" aria-hidden />
-          Trang quản lý đang mở công khai và <strong>không có đăng nhập</strong>. Tắt ADMIN_ENABLED
-          hoặc thêm xác thực trước khi dùng thật.
+          Trang quản lý đang chạy trên bản triển khai, chỉ được bảo vệ bằng{" "}
+          <strong>mật khẩu dùng chung</strong> — chưa có tài khoản đăng nhập riêng.
         </p>
       )}
 
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5">
           <div>
             <p className="wordmark text-sm text-cream">{shop.name}</p>
-            <p className="text-xs text-muted-foreground">Trang quản lý — không đăng nhập</p>
+            <p className="text-xs text-muted-foreground">Trang quản lý</p>
           </div>
           <Link
             href="/"
