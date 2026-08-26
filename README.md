@@ -123,12 +123,30 @@ number.
    filesystem is ephemeral, so a file-backed database would come back empty on
    every deploy and every cold start.
 
-   Run the migrations against it once, from your machine:
+   Run the migrations against it once, from your machine. Keep the credentials
+   in a file rather than inline, so the token stays out of your shell history:
 
    ```bash
-   DATABASE_URL="libsql://…" DATABASE_AUTH_TOKEN="…" bun run db:migrate
-   DATABASE_URL="libsql://…" DATABASE_AUTH_TOKEN="…" bun run db:seed --force
+   # .env.turso — gitignored by the .env* rule
+   DATABASE_URL="libsql://…"
+   DATABASE_AUTH_TOKEN="…"
    ```
+
+   ```bash
+   set -a; source .env.turso; set +a
+   bun run db:migrate
+   bun run db:seed --force
+   rm .env.turso
+   ```
+
+   Exported variables win over `.env.local`, so this reliably targets Turso and
+   not the local file.
+
+   **Do not expect `vercel env pull` to supply the token.** Variables marked
+   *Sensitive* in Vercel are write-only — the pull returns them as empty
+   strings, and an empty `DATABASE_AUTH_TOKEN` sends no auth header at all, so
+   Turso answers `HTTP 401` and the failure looks like a bad token rather than
+   a missing one. Paste the token from Turso into the file yourself.
 
    `db:migrate` is idempotent — it records what it has applied in `_migrations`
    and re-running is a no-op, so repeat it after every release that adds one.
