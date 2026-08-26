@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import type { BookingStatus } from "@/db/schema";
 import { assertAdminEnabled } from "@/lib/admin";
 import { calendarIsConfigured } from "@/lib/calendar";
-import { countBookingsByStatus, listBookings, listServices } from "@/lib/bookings";
+import { countBookingsByStatus, listBarbers, listBookings, listServices } from "@/lib/bookings";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -23,10 +23,11 @@ export default async function AdminBookingsPage({ searchParams }: PageProps<"/ad
   const raw = typeof params.status === "string" ? params.status : "all";
   const filter = (FILTERS as readonly string[]).includes(raw) ? raw : "all";
 
-  const [bookings, counts, services] = await Promise.all([
+  const [bookings, counts, services, barbers] = await Promise.all([
     listBookings(filter === "all" ? undefined : (filter as BookingStatus)),
     countBookingsByStatus(),
     listServices(),
+    listBarbers().catch(() => []),
   ]);
 
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
@@ -89,6 +90,9 @@ export default async function AdminBookingsPage({ searchParams }: PageProps<"/ad
               booking={booking}
               serviceName={
                 services.find((s) => s.slug === booking.serviceSlug)?.nameVi ?? booking.serviceSlug
+              }
+              barberName={
+                barbers.find((b) => b.slug === booking.barberSlug)?.name_vi ?? booking.barberSlug
               }
             />
           ))}

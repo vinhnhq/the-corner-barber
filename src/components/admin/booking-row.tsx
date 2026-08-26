@@ -25,7 +25,16 @@ const STATUS: Record<BookingStatus, { label: string; className: string }> = {
  * another time, or cancel. Each is a plain form posting a Server Action, so the
  * row still works if the page's JavaScript never arrives.
  */
-export function BookingRow({ booking, serviceName }: { booking: Booking; serviceName: string }) {
+export function BookingRow({
+  booking,
+  serviceName,
+  barberName,
+}: {
+  booking: Booking;
+  serviceName: string;
+  /** Resolved by the page — the row only ever holds the slug. */
+  barberName: string;
+}) {
   const [rescheduling, setRescheduling] = useState(false);
   const status = STATUS[booking.status];
 
@@ -58,9 +67,7 @@ export function BookingRow({ booking, serviceName }: { booking: Booking; service
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Thợ</dt>
-          <dd className="text-cream">
-            {booking.barberSlug === "any" ? "Bất kỳ" : booking.barberSlug}
-          </dd>
+          <dd className="text-cream">{barberName}</dd>
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Thời gian mong muốn</dt>
