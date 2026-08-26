@@ -12,7 +12,11 @@ import { notFound } from "next/navigation";
  * Anyone turning this on in production must add real auth first.
  */
 export function assertAdminEnabled(): void {
-  const explicit = process.env.ADMIN_ENABLED;
+  // An empty value counts as unset. `.env.example` ships the key blank so that
+  // copying the file into a production environment cannot switch the admin on,
+  // and treating "" as "explicitly set" there would instead disable the admin
+  // for everyone working locally.
+  const explicit = process.env.ADMIN_ENABLED || undefined;
   const enabled =
     explicit === undefined ? process.env.NODE_ENV !== "production" : explicit === "true";
 
