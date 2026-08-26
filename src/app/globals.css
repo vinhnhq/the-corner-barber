@@ -1,26 +1,269 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
+  --font-display: var(--font-display);
+
+  /* Brand tokens, on top of the shadcn set. Named after the room they came
+     from: brass sconces, olive walls, mahogany millwork, cream lettering. */
+  --color-brass: var(--brass);
+  --color-brass-dim: var(--brass-dim);
+  --color-olive: var(--olive);
+  --color-sage: var(--sage);
+  --color-wood: var(--wood);
+  --color-cream: var(--cream);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* The site is dark-only by design: it is lit like the shop is lit. The palette
+   therefore lives on :root, and `.dark` repeats it so any shadcn component that
+   assumes a dark class still resolves the same values. */
+:root,
+.dark {
+  /* — brand ————————————————————————————————————————— */
+  --brass: oklch(0.79 0.115 83);
+  --brass-dim: oklch(0.62 0.088 80);
+  --olive: oklch(0.42 0.045 128);
+  --sage: oklch(0.68 0.048 126);
+  --wood: oklch(0.34 0.062 44);
+  --cream: oklch(0.94 0.016 88);
+
+  /* — surfaces ————————————————————————————————————— */
+  --background: oklch(0.17 0.013 128);
+  --foreground: var(--cream);
+  --card: oklch(0.23 0.021 129);
+  --card-foreground: var(--cream);
+  --popover: oklch(0.21 0.019 129);
+  --popover-foreground: var(--cream);
+
+  /* — semantic ————————————————————————————————————— */
+  --primary: var(--brass);
+  --primary-foreground: oklch(0.19 0.02 90);
+  --secondary: oklch(0.28 0.026 128);
+  --secondary-foreground: var(--cream);
+  --muted: oklch(0.26 0.022 128);
+  --muted-foreground: oklch(0.73 0.023 108);
+  --accent: oklch(0.31 0.032 128);
+  --accent-foreground: var(--cream);
+  --destructive: oklch(0.62 0.19 25);
+  --success: oklch(0.66 0.13 152);
+  --warning: oklch(0.75 0.14 75);
+
+  --border: oklch(0.94 0.016 88 / 12%);
+  --input: oklch(0.94 0.016 88 / 16%);
+  --ring: var(--brass-dim);
+
+  --chart-1: var(--brass);
+  --chart-2: var(--sage);
+  --chart-3: var(--wood);
+  --chart-4: oklch(0.55 0.06 128);
+  --chart-5: oklch(0.7 0.05 88);
+
+  --radius: 0.25rem;
+
+  --sidebar: oklch(0.2 0.017 128);
+  --sidebar-foreground: var(--cream);
+  --sidebar-primary: var(--brass);
+  --sidebar-primary-foreground: oklch(0.19 0.02 90);
+  --sidebar-accent: oklch(0.28 0.026 128);
+  --sidebar-accent-foreground: var(--cream);
+  --sidebar-border: oklch(0.94 0.016 88 / 12%);
+  --sidebar-ring: var(--brass-dim);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    /* A faint warm wash from the top, the way the sconces light the room. */
+    background-image: radial-gradient(
+      120rem 60rem at 50% -20rem,
+      oklch(0.79 0.115 83 / 7%),
+      transparent 70%
+    );
+    background-attachment: fixed;
+    transition: opacity 220ms ease;
+  }
+
+  /* Language switch.
+     Swapping the locale is a server round-trip, so every string on the page
+     changes in a single commit — without this it reads as a hard flicker. The
+     document carries `data-locale-switching` while the new language is in
+     flight (set by LocaleSwitcher); the page dips, then settles back as the new
+     copy commits. It fades as one piece by design — opacity applies to the
+     whole subtree, so nothing inside can opt out of it. */
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-locale-switching] body {
+      opacity: 0.45;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading font-normal tracking-tight text-balance;
+  }
+
+  /* Only ever suppress motion, never layout. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* The engraved wordmark, as it appears in gold on the shopfront glass.
+     Cinzel ships `latin` and `latin-ext` only — there is no Vietnamese subset —
+     so this class is for the brand lockup and nothing else. Vietnamese text set
+     in it falls back per-glyph on every diacritic, which reads as broken. Use
+     `.label` for interface copy. */
+  .wordmark {
+    @apply font-display uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  /* Small tracked caps for interface copy: nav, eyebrows, field labels, badges.
+     Set in the body face, which carries the full Vietnamese range, and at 500
+     so it stays legible at the sizes it is used. */
+  .label {
+    @apply font-sans font-medium uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  /* A brass hairline with a diamond at its centre — the divider used on the
+     shop's own price board, between "BARBERSHOP" and the sections below it. */
+  .brass-rule {
+    @apply flex items-center gap-3 text-brass;
+  }
+  .brass-rule::before,
+  .brass-rule::after {
+    content: "";
+    @apply h-px flex-1;
+    background: linear-gradient(
+      to var(--brass-rule-direction, right),
+      transparent,
+      var(--brass-dim)
+    );
+  }
+  .brass-rule::before {
+    --brass-rule-direction: left;
+  }
+
+  /* Panelled wainscot edge, matching the moulding on the olive walls. */
+  .panel {
+    @apply border border-border/80 bg-card/60;
+    box-shadow:
+      inset 0 1px 0 oklch(0.94 0.016 88 / 6%),
+      0 1px 2px oklch(0 0 0 / 30%);
+  }
+
+  /* Film grain over photography, so large flat images keep some texture. */
+  .grain::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 opacity-[0.14] mix-blend-overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@layer components {
+  /* Scroll-driven reveal.
+     The base rule is deliberately empty of any hidden state: if a browser does
+     not support view() timelines, or the visitor prefers reduced motion, the
+     content simply renders as normal. The animation is only ever additive. */
+  .reveal {
+    --reveal-step: 0;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation: reveal-in linear both;
+        animation-timeline: view();
+        /* Staggering with animation-delay does not work on a scroll timeline,
+           so siblings are offset along the range instead. */
+        animation-range: entry calc(8% + var(--reveal-step) * 6%) entry
+          calc(58% + var(--reveal-step) * 6%);
+      }
+    }
+  }
+
+  @keyframes reveal-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* Scrim for type sitting over photography.
+     Three layers, in order: an overall darkening so cream text clears contrast
+     anywhere in the frame, a vignette pulling the edges down further, and a
+     hard fade into the page background at the bottom so the section joins the
+     one below it without a seam. The shop's footage is warm and bright, so the
+     overall layer has to do most of the work — an edges-only vignette leaves
+     the centre, which is exactly where the headline sits, unreadable. */
+  .vignette {
+    background-image:
+      linear-gradient(to top, var(--background) 0%, transparent 22%),
+      radial-gradient(130% 95% at 50% 42%, oklch(0.17 0.013 128 / 80%), oklch(0.17 0.013 128 / 95%));
+  }
 }
