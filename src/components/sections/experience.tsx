@@ -25,9 +25,12 @@ export function Experience({ t }: { t: Dictionary }) {
             const Icon = ICONS[i] ?? Check;
             return (
               <Reveal key={step.title} delay={i} as="li" className="relative flex flex-col gap-4">
+                {/* The faint numeral sits behind the disc and title on the same
+                    left edge, so each step reads as one column rather than a
+                    disc on the left and a number drifting off to the right. */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -top-6 right-2 font-serif text-8xl leading-none text-cream/[0.05] select-none"
+                  className="pointer-events-none absolute -top-7 -left-1 font-serif text-8xl leading-none text-cream/[0.06] select-none"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
