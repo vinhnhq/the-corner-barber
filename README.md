@@ -20,33 +20,47 @@ login**; see the warning below.
 
 ## Scripts
 
-| Command                 | What it does                                                  |
-| ----------------------- | ------------------------------------------------------------- |
-| `bun run dev`           | Dev server (Turbopack)                                        |
-| `bun run build`         | Production build                                              |
-| `bun run lint`          | oxlint (type-aware) + oxfmt check                             |
-| `bun run format`        | oxfmt write                                                   |
-| `bun run typecheck`     | `tsc --noEmit`                                                |
-| `bun run db:migrate`    | Apply migrations                                              |
-| `bun run db:seed`       | Seed services, barbers, hours, gallery selection (local only) |
-| `bun run db:seed:force` | Same, but allowed against a remote database — see below       |
-| `bun run db:reset`      | Delete the local database and rebuild it                      |
-| `bun run assets:sheets` | Contact sheets over every source photo → `scratch/sheets/`    |
-| `bun run assets:photos` | Encode the curated shortlist → `public/photos/` + manifest    |
-| `bun run assets:video`  | Cut and encode the hero loop → `public/video/`                |
+| Command                 | What it does                                              |
+| ----------------------- | --------------------------------------------------------- |
+| `bun run dev`           | Dev server (Turbopack)                                    |
+| `bun run build`         | Production build                                          |
+| `bun run lint`          | oxlint (type-aware) + oxfmt check                         |
+| `bun run format`        | oxfmt write                                               |
+| `bun run typecheck`     | `tsc --noEmit`                                            |
+| `bun run db:migrate`    | Apply migrations                                          |
+| `bun run db:seed`       | Seed services, barbers, hours, media (local only)         |
+| `bun run db:seed:force` | Same, but allowed against a remote database — see below   |
+| `bun run db:reset`      | Delete the local database and rebuild it                  |
+| `bun run assets:import` | One-time: optimise `temp/*` and push to Blob → media seed |
 
 ## Editing content
 
-- **Services, prices, barbers, hours, gallery** — edit in `/admin`, or change
+- **Services, prices, barbers, hours** — edit in `/admin`, or change
   `src/lib/shop.ts` and re-run `bun run db:seed`.
 - **Booking window** — `BOOKABLE_DAYS` in `src/lib/slots.ts` (30 days). The date
   field is a list of days rather than `<input type="date">`, which renders no
   calendar indicator on iOS Safari.
 - **Copy** — `src/lib/i18n/dictionaries.ts`. Vietnamese and English are typed
   against the same shape, so a missing string fails the build.
-- **Photos** — add or swap entries in `scripts/photos.manifest.ts`, then run
-  `bun run assets:photos`. Originals live in `_source-assets/` and are never
-  committed.
+- **Photos and clips** — two admin pages, both built for a phone. **Thư viện**
+  (`/admin/media`) uploads, describes and deletes: files are shaped on the
+  device first (images ≤ 2400 px JPEG; clips re-encoded to 1080p H.264 MP4
+  with WebCodecs, or uploaded as-is where that is missing), sent straight to
+  Vercel Blob via a client-upload token from `/admin/api/upload`, then
+  recorded in `media` with size, blur placeholder and poster. **Trang chính**
+  (`/admin/pages`) is where pictures are placed: every fixed spot on the site
+  (hero, package cards, about, booking backdrop — `media_slots`) and each
+  barber's avatar has a "Chọn ảnh" that opens the library as a grid; the
+  Không gian section picks and orders the gallery. Nothing in `public/`.
+- **Barbers and hours** — `/admin/shop` (Tiệm).
+- **Bulk import** — `bun run assets:import <folder>…` optimises every still
+  (≤ 2400 px JPEG, HEIC via `sips`) and clip (1080p H.264, poster frame) in
+  the folders and pushes them to Blob, skipping originals the curated set
+  already covers (`scripts/curated-sources.json`). With no arguments it does
+  the first-run set (`temp/`). Needs ImageMagick, ffmpeg and
+  `BLOB_READ_WRITE_TOKEN`. It merges into `src/db/media.seed.json`, which
+  `db:seed` inserts insert-only — so re-seeding never undoes curation done in
+  the admin. Imported items start hidden.
 - **Icons / logo** — drop a new mark into `favicon/` and run
   `bun run assets:icons`. It recolours the silhouette to brass, sets it on the
   site's olive ground and writes every size: `src/app/favicon.ico`,

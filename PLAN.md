@@ -13,7 +13,7 @@ what was decided, what shipped, and what is still open.
 | Framework | Next.js 16.3.2 App Router, RSC-first, React 19.2, React Compiler on      |
 | Styling   | Tailwind v4 + shadcn/ui (radix · maia), custom olive/brass token set     |
 | Motion    | CSS scroll-driven animation. No JS animation library — see below         |
-| Type      | Cinzel = brand lockup only · Cormorant = headings · Be Vietnam = UI      |
+| Type      | Cormorant display + italic gold accent · IBM Plex Mono caps · Inter body |
 | Data      | SQLite via `@libsql/client` at `file:./data/corner.db`; Kysely on top    |
 | Auth      | **None.** `/admin` is open; 404s in production unless `ADMIN_ENABLED`    |
 | Content   | Real menu, address and phone, read off the shop's own signage            |
@@ -46,19 +46,81 @@ station, 1280×720 H.264, 4.6 MB, with a poster frame.
 ### Phase 2 — design system
 
 oklch token set in `globals.css` (brass / olive / sage / wood / cream on top of
-the shadcn set). Three type roles, and the split between them matters:
+the shadcn set).
 
-- **Cinzel** (`.wordmark`) — the engraved brand lockup, and nothing else.
-- **Cormorant Garamond** — headings.
-- **Be Vietnam Pro** (`.label`, body) — interface copy and body text.
+**Restyled 2026-09-21, twice.** First to K-Studio's quiet language (Inter
+only, no borders, rounded surfaces), then — the same evening, on Vinh's call —
+to the look of zinblecolor.com, which he prefers for a landing page. The
+K-Studio pass left two things that survive: the admin's phone-first shell and
+the "respect the user's preferences" media queries. The current language:
 
-`brass-rule`, `panel`, `grain`, `vignette` primitives.
+- **Three faces with strict roles.** Cormorant Garamond 600 for display
+  (hero 5rem, h2 3.25rem, −0.02em), every heading carrying one `*phrase*`
+  rendered by `<Accent>` as italic gold; IBM Plex Mono 11px caps at 0.28em
+  (`.tag`) for eyebrows, nav, buttons, prices and meta; Inter for reading.
+  Zinble's body face, Instrument Sans, has no Vietnamese subset — Inter is
+  the honest swap. All three ship the `vietnamese` range.
+- **Neutral near-black, one copper.** `#0d0d0f` ground, `#141417` panels,
+  `#1e1e22` hairlines, three greys of ink (`cream`, `muted-foreground`,
+  `dim`). `brass` `#c47a42` for eyebrows and meta, `gold` `#e0b483` for the
+  italic phrase and prices, and the gradient `--grad-gold` reserved for the
+  primary button. Photographs supply the warmth; `.glow` is a faint radial
+  behind the booking and closing sections.
+- **Sharp and hairlined.** `--radius: 0`; `.surface` is `border bg-card`;
+  sections break on `border-t`; rows, FAQ items and the footer use hairlines.
+  Pills (`rounded-full`) survive for tags and the step discs.
+- **Structure from the reference.** Left-aligned hero over a right-weighted
+  photo (`.scrim` darkens from the left), two CTAs and a stats row; section
+  heads with an eyebrow, an accented serif title and an optional right-hand
+  link; package cards with a pill tag; a 4-step rail with icon discs and
+  faint numerals; a `<details>` FAQ; a closing CTA; a 4-column footer with
+  mono headers; and a `StickyBar` that appears once the hero is gone and
+  hides while the booking form is on screen.
+
+### Phase 2b — media in Vercel Blob (2026-09-21)
+
+Every picture and clip moved from a build-time manifest in the bundle
+(`src/lib/photos.ts`, `public/photos`, `public/video`) to rows in `media`
+pointing at Vercel Blob, plus `media_slots` for the fixed places on the page
+(hero, package 1–3, about 1–2, booking) and `barbers.photo_id` for avatars.
+The gallery is `media.is_visible` in `rank` order and may contain clips.
+
+The admin is used on a phone from the shop floor, so it grew a bottom dock
+(`AdminNav`), 44 px controls below `sm` (a wrapper rule, `[data-admin]`, so
+`ui/` stays pristine), and — after a first version that assigned places with
+`<select>`s — a split the shop can follow: **Thư viện** holds the files,
+**Trang chính** lists every place on the site with a visual `MediaPicker`
+(a `<dialog>` grid of the library; single-choice for a slot or avatar,
+multi-toggle for the gallery), and **Tiệm** merges barbers and hours so the
+dock stays at five. `PageHeader` / `AdminSection` are the shared openers. Uploads are shaped **on the device**
+before they leave it — `src/lib/media-client.ts`: canvas for stills, WebCodecs
+via `mediabunny` for clips (1080p H.264/AAC, moov first, rotation baked in),
+falling back to the original where WebCodecs is missing. The poster frame is
+decoded with mediabunny's `CanvasSink` because a detached `<video>` never
+reliably fires `seeked` in Chrome. The file goes straight to Blob with a
+client-upload token from `/admin/api/upload` (behind the same Basic auth as
+the rest of `/admin`), and a server action records the row afterwards — the
+`onUploadCompleted` webhook cannot reach a dev machine.
+
+`scripts/import-media.ts` did the move: 33 curated stills + hero loop + 34
+files the shop handed over in `temp/`, then (2026-09-22) all 279 stills and 8
+clips of the opening-day originals in `_source-assets/` → 323 items, 246 MB
+in Blob from ~4.4 GB. The hero is a 10 s, 720p, silent 2.2 MB cut of the
+shop's own portrait clip; it plays on phones too. It writes `src/db/media.seed.json`; `db:seed` inserts insert-only so
+curation in the admin survives a re-seed. Imported items start hidden.
+Gotchas: the Blob SDK prefers a `VERCEL_OIDC_TOKEN` when one is around and
+the pulled one is not enabled for development — pass
+`token: BLOB_READ_WRITE_TOKEN` explicitly; ImageMagick here has no HEIC
+coder — `sips` does.
 
 ### Phase 3 — landing
 
-Hero (video) · Services · Gallery (lightbox) · Barbers · About · Visit ·
-Booking · Footer. Server Components throughout; the only client components are
-the header, locale switcher, hero video, gallery lightbox and booking form.
+Hero (video) · About · Services · Space (lightbox) · Experience · Booking ·
+Footer (doubles as Contact). Server Components throughout; the only client
+components are the header, locale switcher, hero video, gallery lightbox and
+booking form. The Barbers and Visit sections were dropped in September 2026
+when the shop supplied its own copy — the barber picker lives on in the
+booking form and hours/address moved to the footer.
 
 ### Phase 4 — i18n
 
@@ -151,14 +213,12 @@ subtree and inherits its opacity.
 **Booking rows are mapped to plain objects.** The driver's row objects are not
 plain, and React rejects them when they cross into a Client Component.
 
-**Cinzel cannot set Vietnamese.** It publishes `latin` and `latin-ext` only —
-measuring `ỆỊỤỖƯĐ` against a fallback face shows identical widths, i.e. the
-font has none of those glyphs. It was initially used for all small tracked caps
-(nav, eyebrows, field labels), so every diacritic fell through to a fallback
-mid-word. Interface copy moved to `.label` on Be Vietnam Pro; Cinzel is now
-reserved for the Latin brand lockup. The rendered DOM was audited on both `/`
-and `/admin` for any element carrying Vietnamese text while resolving to
-Cinzel — zero remain.
+**Cinzel cannot set Vietnamese** (historical — Cinzel is gone since the Inter
+restyle). It publishes `latin` and `latin-ext` only — measuring `ỆỊỤỖƯĐ`
+against a fallback face shows identical widths, i.e. the font has none of those
+glyphs. It was initially used for all small tracked caps, so every diacritic
+fell through to a fallback mid-word. The lesson survives the font: check
+`document.fonts` for the `vietnamese` unicode-range actually loading.
 
 **The supplied icon could not be used as delivered.** The export was a black
 silhouette on transparency, which disappears against a dark browser tab strip
@@ -205,10 +265,18 @@ applies to the whole subtree, so nothing inside can be held out of it.
   test; events set explicit `reminders.overrides` rather than trusting the
   calendar's defaults, which should cover it.
 
-## Content taken from the photos
+## Content
 
-The service menu, prices, address and phone were transcribed from the shop's own
-price board (`P7250600.JPG`) and street signboard (`P7250619.JPG`):
+The site copy and the service menu are the shop's own, supplied in September
+2026 and kept in `src/lib/i18n/dictionaries.ts` and `src/lib/shop.ts`. The
+menu superseded the opening-day price board: singles became a "Thư giãn"
+group, perms got their own, several prices are ranges (`price_max`), and the
+four board-only items (cạo mặt, cạo râu, gội đầu, nhuộm nâu) are retired by
+the seed (`is_active = 0`) so old bookings still resolve. The copy says
+**4 barber chairs**; the station photos show six mirrors — unverified.
+
+The address and phone were transcribed from the shop's street signboard
+(`P7250619.JPG`) and price board (`P7250600.JPG`):
 
 - **206 Võ Thị Đặng, Phường Tân Mỹ, TP. Hồ Chí Minh** · **0889 775 088** · EST. 2026
 - The price board writes the older street name, "206 Đường số 9, Tân Mỹ".
