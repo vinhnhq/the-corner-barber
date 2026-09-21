@@ -101,6 +101,80 @@ const migrations: Migration[] = [
       await sql`ALTER TABLE bookings ADD COLUMN google_event_id TEXT`.execute(getDb());
     },
   },
+  {
+    name: "0003_service_menu",
+    up: async () => {
+      // The shop rewrote its menu: "single" services became "relax", perms got
+      // their own group, and several prices are now ranges. SQLite cannot
+      // change a CHECK constraint in place, so the table is rebuilt and the
+      // rows copied across. Bookings reference services by slug, so ids do not
+      // matter.
+      await sql`
+        CREATE TABLE services_new (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          slug        TEXT    NOT NULL UNIQUE,
+          group_name  TEXT    NOT NULL CHECK (group_name IN ('package','relax','colour','perm')),
+          rank        INTEGER NOT NULL,
+          name_vi     TEXT    NOT NULL,
+          name_en     TEXT    NOT NULL,
+          price       INTEGER NOT NULL,
+          price_max   INTEGER,
+          was_price   INTEGER,
+          minutes     INTEGER NOT NULL,
+          includes_vi TEXT    NOT NULL DEFAULT '[]',
+          includes_en TEXT    NOT NULL DEFAULT '[]',
+          tagline_vi  TEXT,
+          tagline_en  TEXT,
+          is_active   INTEGER NOT NULL DEFAULT 1
+        )
+      `.execute(getDb());
+      await sql`
+        INSERT INTO services_new
+          (id, slug, group_name, rank, name_vi, name_en, price, was_price, minutes,
+           includes_vi, includes_en, is_active)
+        SELECT id, slug,
+               CASE group_name WHEN 'single' THEN 'relax' ELSE group_name END,
+               rank, name_vi, name_en, price, was_price, minutes,
+               includes_vi, includes_en, is_active
+        FROM services
+      `.execute(getDb());
+      await sql`DROP TABLE services`.execute(getDb());
+      await sql`ALTER TABLE services_new RENAME TO services`.execute(getDb());
+    },
+  },
+  {
+    name: "0004_media",
+    up: async () => {
+      // Pictures and clips move from a static manifest in the bundle to rows
+      // pointing at Vercel Blob. `gallery_photos` only ever keyed that
+      // manifest, so it is dropped; the seed re-creates the same selection as
+      // `media.is_visible`.
+      await sql`
+        CREATE TABLE media (
+          id         TEXT    PRIMARY KEY,
+          kind       TEXT    NOT NULL CHECK (kind IN ('image','video')),
+          url        TEXT    NOT NULL,
+          poster_url TEXT,
+          width      INTEGER NOT NULL,
+          height     INTEGER NOT NULL,
+          blur       TEXT    NOT NULL,
+          alt        TEXT    NOT NULL DEFAULT '',
+          bytes      INTEGER NOT NULL,
+          rank       INTEGER NOT NULL DEFAULT 0,
+          is_visible INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+        )
+      `.execute(getDb());
+      await sql`CREATE INDEX media_gallery ON media (is_visible, rank)`.execute(getDb());
+      await sql`
+        CREATE TABLE media_slots (
+          slot     TEXT PRIMARY KEY,
+          media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE
+        )
+      `.execute(getDb());
+      await sql`DROP TABLE IF EXISTS gallery_photos`.execute(getDb());
+    },
+  },
 ];
 
 async function ensureLocalDirectory() {

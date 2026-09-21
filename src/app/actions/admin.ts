@@ -140,10 +140,14 @@ export async function updateService(formData: FormData): Promise<void> {
   const nameVi = readString(formData, "nameVi").trim();
   const nameEn = readString(formData, "nameEn").trim();
   const price = priceSchema.safeParse(formData.get("price"));
+  // An empty field means a fixed price; a range must not run backwards.
+  const priceMaxRaw = readString(formData, "priceMax").trim();
+  const priceMax = priceMaxRaw === "" ? null : priceSchema.safeParse(priceMaxRaw);
   const minutes = z.coerce.number().int().min(5).max(480).safeParse(formData.get("minutes"));
   const isActive = formData.get("isActive") === "on" ? 1 : 0;
 
   if (!slug || !nameVi || !nameEn || !price.success || !minutes.success) return;
+  if (priceMax !== null && (!priceMax.success || priceMax.data <= price.data)) return;
 
   await getDb()
     .updateTable("services")
@@ -151,6 +155,7 @@ export async function updateService(formData: FormData): Promise<void> {
       name_vi: nameVi,
       name_en: nameEn,
       price: price.data,
+      price_max: priceMax === null ? null : priceMax.data,
       minutes: minutes.data,
       is_active: isActive,
     })
@@ -177,7 +182,7 @@ export async function updateBarber(formData: FormData): Promise<void> {
     .where("slug", "=", slug)
     .execute();
 
-  revalidatePath("/admin/barbers");
+  revalidatePath("/admin/shop");
   revalidatePath("/");
 }
 
@@ -208,23 +213,6 @@ export async function updateHours(formData: FormData): Promise<void> {
     .onConflict((oc) => oc.column("key").doUpdateSet({ value, updated_at: now() }))
     .execute();
 
-  revalidatePath("/admin/hours");
-  revalidatePath("/");
-}
-
-export async function toggleGalleryPhoto(formData: FormData): Promise<void> {
-  assertAdminEnabled();
-
-  const photoId = readString(formData, "photoId");
-  const visible = formData.get("visible") === "true" ? 1 : 0;
-  if (!photoId) return;
-
-  await getDb()
-    .insertInto("gallery_photos")
-    .values({ photo_id: photoId, rank: 0, is_visible: visible })
-    .onConflict((oc) => oc.column("photo_id").doUpdateSet({ is_visible: visible }))
-    .execute();
-
-  revalidatePath("/admin/gallery");
+  revalidatePath("/admin/shop");
   revalidatePath("/");
 }

@@ -1,9 +1,9 @@
 /**
  * Everything the shop publishes about itself.
  *
- * The services, prices, address and phone number below were transcribed from
- * the shop's own price board and street signboard in the opening-day photos
- * (`P7250600.JPG` and `P7250619.JPG`), so they are real, not placeholder.
+ * The address and phone number were transcribed from the shop's street
+ * signboard in the opening-day photos (`P7250619.JPG`). The menu is the one the
+ * shop wrote for the site in September 2026 — see `services` below.
  *
  * Anything still unverified is marked `TODO(content)`.
  *
@@ -45,7 +45,9 @@ export const shop = {
   },
 } as const;
 
-export type ServiceGroup = "package" | "single" | "colour";
+/** Menu order — the groups as the shop lists them, packages first. */
+export const SERVICE_GROUPS = ["package", "relax", "colour", "perm"] as const;
+export type ServiceGroup = (typeof SERVICE_GROUPS)[number];
 
 export type Service = {
   slug: string;
@@ -54,178 +56,159 @@ export type Service = {
   rank: number;
   nameVi: string;
   nameEn: string;
-  /** Price in đồng. */
+  /** Price in đồng. For a range this is the low end. */
   price: number;
+  /** High end of a price range ("350K – 450K"), else null. */
+  priceMax: number | null;
   /** Original price when the shop advertises a discount, else null. */
   wasPrice: number | null;
   /** Rough chair time in minutes — used to size a booking slot. */
   minutes: number;
   includesVi: string[];
   includesEn: string[];
+  /** One-line description under a package, else null. */
+  taglineVi: string | null;
+  taglineEn: string | null;
 };
 
 /**
- * The full menu from the price board. `GÓI TRẢI NGHIỆM` is the one item the
- * board shows discounted (285.000đ struck through, 199.000đ after -30%).
+ * The menu as the shop wrote it for the site (September 2026), which
+ * supersedes the opening-day price board. Slugs that were on the board are
+ * kept so existing bookings still resolve; anything the shop dropped is
+ * deactivated by the seed, not deleted.
  */
 export const services: Service[] = [
   {
     slug: "goi-cat-toc",
     group: "package",
     rank: 1,
-    nameVi: "Gói cắt tóc",
-    nameEn: "The Cut",
+    nameVi: "Cắt & xả tóc",
+    nameEn: "Haircut & Rinse",
     price: 120_000,
+    priceMax: null,
     wasPrice: null,
     minutes: 40,
-    includesVi: ["Xả tóc", "Cắt tóc", "Tạo kiểu tóc"],
-    includesEn: ["Hair rinse", "Haircut", "Styling"],
+    includesVi: ["Cắt tóc nam", "Xả tóc"],
+    includesEn: ["Men's haircut", "Hair rinse"],
+    taglineVi: null,
+    taglineEn: null,
   },
   {
     slug: "goi-trai-nghiem",
     group: "package",
     rank: 2,
-    nameVi: "Gói trải nghiệm",
-    nameEn: "The Experience",
+    nameVi: "The Corner Experience",
+    nameEn: "The Corner Experience",
     price: 199_000,
-    wasPrice: 285_000,
+    priceMax: null,
+    wasPrice: null,
     minutes: 60,
-    includesVi: ["Xả tóc", "Cắt tóc", "Tạo kiểu tóc", "Gội thư giãn", "Tẩy tế bào chết da mặt"],
-    includesEn: ["Hair rinse", "Haircut", "Styling", "Relaxing shampoo", "Facial exfoliation"],
+    includesVi: ["Cắt tóc nam", "Gội đầu", "Tẩy da chết", "Gội thư giãn", "Tạo kiểu"],
+    includesEn: [
+      "Men's haircut",
+      "Hair wash",
+      "Scalp exfoliation",
+      "Relaxing hair wash",
+      "Styling",
+    ],
+    taglineVi: "Một trải nghiệm được thiết kế để bạn thư giãn và trở nên chỉn chu hơn.",
+    taglineEn:
+      "A grooming experience designed to help you relax and leave feeling refreshed and well-groomed.",
   },
   {
     slug: "goi-cham-soc-toan-dien",
     group: "package",
     rank: 3,
-    nameVi: "Gói chăm sóc toàn diện",
-    nameEn: "The Full Service",
+    nameVi: "Chăm sóc toàn diện",
+    nameEn: "Full Grooming Experience",
     price: 399_000,
+    priceMax: null,
     wasPrice: null,
     minutes: 105,
     includesVi: [
-      "Xả tóc",
-      "Cắt tóc",
-      "Tạo kiểu tóc",
+      "Cắt tóc nam",
+      "Gội đầu",
+      "Tẩy da chết",
       "Gội thư giãn",
-      "Tẩy tế bào chết da mặt",
-      "Đắp mặt nạ",
+      "Massage đầu",
       "Massage mặt",
-      "Massage da đầu",
-      "Chăm sóc móng tay",
-      "Chăm sóc móng chân",
+      "Đắp mặt",
+      "Cắt móng tay",
+      "Tạo kiểu",
     ],
     includesEn: [
-      "Hair rinse",
-      "Haircut",
+      "Men's haircut",
+      "Hair wash",
+      "Scalp exfoliation",
+      "Relaxing hair wash",
+      "Head massage",
+      "Facial massage",
+      "Facial mask",
+      "Nail care",
       "Styling",
-      "Relaxing shampoo",
-      "Facial exfoliation",
-      "Face mask",
-      "Face massage",
-      "Scalp massage",
-      "Manicure",
-      "Pedicure",
     ],
+    taglineVi: "Chăm sóc trọn vẹn từ đầu đến cuối.",
+    taglineEn: "A complete grooming experience from start to finish.",
   },
 
-  {
-    slug: "cao-mat",
-    group: "single",
-    rank: 1,
-    nameVi: "Cạo mặt",
-    nameEn: "Face shave",
-    price: 20_000,
-    wasPrice: null,
-    minutes: 15,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "cao-rau",
-    group: "single",
-    rank: 2,
-    nameVi: "Cạo râu",
-    nameEn: "Beard shave",
-    price: 50_000,
-    wasPrice: null,
-    minutes: 20,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "goi-dau",
-    group: "single",
-    rank: 3,
-    nameVi: "Gội đầu",
-    nameEn: "Shampoo",
-    price: 70_000,
-    wasPrice: null,
-    minutes: 25,
-    includesVi: [],
-    includesEn: [],
-  },
+  single("ray-tai", "relax", 1, "Ráy tai", "Ear cleaning", 90_000, null, 20),
+  single(
+    "co-vai-gay-da-nong",
+    "relax",
+    2,
+    "Cổ vai gáy đá nóng",
+    "Hot stone neck & shoulder massage",
+    150_000,
+    null,
+    30,
+  ),
+  single("head-spa", "relax", 3, "Head Spa", "Relaxing head spa", 150_000, null, 45),
 
-  {
-    slug: "nhuom-den",
-    group: "colour",
-    rank: 1,
-    nameVi: "Nhuộm đen",
-    nameEn: "Black colour",
-    price: 200_000,
-    wasPrice: null,
-    minutes: 60,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "nhuom-nau",
-    group: "colour",
-    rank: 2,
-    nameVi: "Nhuộm nâu",
-    nameEn: "Brown colour",
-    price: 300_000,
-    wasPrice: null,
-    minutes: 75,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "tay-toc",
-    group: "colour",
-    rank: 3,
-    nameVi: "Tẩy tóc",
-    nameEn: "Bleach",
-    price: 250_000,
-    wasPrice: null,
-    minutes: 75,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "uon-toc",
-    group: "colour",
-    rank: 4,
-    nameVi: "Uốn tóc",
-    nameEn: "Perm",
-    price: 350_000,
-    wasPrice: null,
-    minutes: 105,
-    includesVi: [],
-    includesEn: [],
-  },
-  {
-    slug: "uon-con-sau",
-    group: "colour",
-    rank: 5,
-    nameVi: "Uốn con sâu",
-    nameEn: "Curly perm",
-    price: 450_000,
-    wasPrice: null,
-    minutes: 120,
-    includesVi: [],
-    includesEn: [],
-  },
+  single("nhuom-den", "colour", 1, "Nhuộm đen", "Black hair colour", 200_000, null, 60),
+  single("mau-co-ban", "colour", 2, "Màu cơ bản", "Basic hair colour", 350_000, 450_000, 90),
+  single(
+    "mau-thoi-trang",
+    "colour",
+    3,
+    "Màu thời trang",
+    "Fashion hair colour",
+    450_000,
+    600_000,
+    120,
+  ),
+  single("tay-toc", "colour", 4, "Tẩy tóc", "Hair bleaching", 250_000, 350_000, 75),
+
+  single("uon-toc", "perm", 1, "Uốn tóc", "Classic hair perm", 350_000, 450_000, 105),
+  single("uon-con-sau", "perm", 2, "Uốn con sâu", "Texture perm", 550_000, 650_000, 120),
 ];
+
+/** A single service has no inclusions or tagline; this keeps the list readable. */
+function single(
+  slug: string,
+  group: Exclude<ServiceGroup, "package">,
+  rank: number,
+  nameVi: string,
+  nameEn: string,
+  price: number,
+  priceMax: number | null,
+  minutes: number,
+): Service {
+  return {
+    slug,
+    group,
+    rank,
+    nameVi,
+    nameEn,
+    price,
+    priceMax,
+    wasPrice: null,
+    minutes,
+    includesVi: [],
+    includesEn: [],
+    taglineVi: null,
+    taglineEn: null,
+  };
+}
 
 /**
  * TODO(content): real barber names and photos. Until the shop supplies them,
@@ -241,6 +224,13 @@ export const barbers = [
 /** Formats đồng the way the shop's own board does: `120.000đ`. */
 export function formatVnd(amount: number): string {
   return `${amount.toLocaleString("vi-VN")}đ`;
+}
+
+/** A service's price, or its range: `350.000đ – 450.000đ`. */
+export function formatPrice(service: Pick<Service, "price" | "priceMax">): string {
+  return service.priceMax === null
+    ? formatVnd(service.price)
+    : `${formatVnd(service.price)} – ${formatVnd(service.priceMax)}`;
 }
 
 /**

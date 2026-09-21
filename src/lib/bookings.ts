@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { getDb, now } from "@/db/client";
 import type { BookingStatus } from "@/db/schema";
-import { services as fallbackServices, type Service } from "@/lib/shop";
+import { SERVICE_GROUPS, services as fallbackServices, type Service } from "@/lib/shop";
 
 /**
  * Vietnamese mobile numbers: 10 digits starting `0`, or the same number written
@@ -46,11 +46,16 @@ export async function listServices(): Promise<Service[]> {
       .selectFrom("services")
       .selectAll()
       .where("is_active", "=", 1)
-      .orderBy("group_name")
       .orderBy("rank")
       .execute();
 
     if (rows.length === 0) return fallbackServices;
+
+    // Menu order, not alphabetical group order — the booking form lists every
+    // service in one select and packages belong at the top.
+    rows.sort(
+      (a, b) => SERVICE_GROUPS.indexOf(a.group_name) - SERVICE_GROUPS.indexOf(b.group_name),
+    );
 
     return rows.map((row) => ({
       slug: row.slug,
@@ -59,10 +64,13 @@ export async function listServices(): Promise<Service[]> {
       nameVi: row.name_vi,
       nameEn: row.name_en,
       price: row.price,
+      priceMax: row.price_max,
       wasPrice: row.was_price,
       minutes: row.minutes,
       includesVi: JSON.parse(row.includes_vi) as string[],
       includesEn: JSON.parse(row.includes_en) as string[],
+      taglineVi: row.tagline_vi,
+      taglineEn: row.tagline_en,
     }));
   } catch {
     // A missing local database should degrade to the static menu rather than
@@ -244,23 +252,4 @@ export async function rescheduleBooking(
     })
     .where("id", "=", id)
     .execute();
-}
-
-/**
- * The gallery selection the admin controls. Falls back to the manifest order
- * when nothing has been chosen yet, so the section is never empty.
- */
-export async function listGalleryPhotoIds(): Promise<string[] | null> {
-  try {
-    const rows = await getDb()
-      .selectFrom("gallery_photos")
-      .select("photo_id")
-      .where("is_visible", "=", 1)
-      .orderBy("rank")
-      .execute();
-
-    return rows.length > 0 ? rows.map((r) => r.photo_id) : null;
-  } catch {
-    return null;
-  }
 }

@@ -11,17 +11,21 @@ export type BookingStatus = "pending" | "confirmed" | "cancelled" | "done";
 export type ServicesTable = {
   id: Generated<number>;
   slug: string;
-  group_name: "package" | "single" | "colour";
+  group_name: "package" | "relax" | "colour" | "perm";
   rank: number;
   name_vi: string;
   name_en: string;
   /** Đồng. */
   price: number;
+  /** High end of a price range, else null. */
+  price_max: number | null;
   was_price: number | null;
   minutes: number;
   /** JSON array of strings. */
   includes_vi: string;
   includes_en: string;
+  tagline_vi: string | null;
+  tagline_en: string | null;
   is_active: Generated<number>;
 };
 
@@ -30,7 +34,7 @@ export type BarbersTable = {
   slug: string;
   name_vi: string;
   name_en: string;
-  /** Key into `src/lib/photos.ts`, or null for "any barber". */
+  /** `media.id` of the avatar, or null (always null for "any barber"). */
   photo_id: string | null;
   rank: Generated<number>;
   is_active: Generated<number>;
@@ -63,12 +67,36 @@ export type ShopSettingsTable = {
   updated_at: Generated<string>;
 };
 
-export type GalleryPhotosTable = {
-  id: Generated<number>;
-  /** Key into `src/lib/photos.ts`. */
-  photo_id: string;
+export type MediaKind = "image" | "video";
+
+/**
+ * Every picture and clip the site can show, stored in Vercel Blob. Rows are
+ * created by the admin upload flow (or the one-time import) after the file is
+ * already in Blob, so `url` is always a real, public address.
+ */
+export type MediaTable = {
+  id: string;
+  kind: MediaKind;
+  url: string;
+  /** Still frame for a video, else null. */
+  poster_url: string | null;
+  width: number;
+  height: number;
+  /** Base64 LQIP data URI for `placeholder="blur"`. */
+  blur: string;
+  alt: Generated<string>;
+  bytes: number;
+  /** Gallery order. */
   rank: Generated<number>;
+  /** Shown in the gallery. Slots and avatars ignore this. */
   is_visible: Generated<number>;
+  created_at: Generated<string>;
+};
+
+/** Which media fills a fixed place on the page — hero, package cards, about, booking. */
+export type MediaSlotsTable = {
+  slot: string;
+  media_id: string;
 };
 
 export type Database = {
@@ -76,5 +104,6 @@ export type Database = {
   barbers: BarbersTable;
   bookings: BookingsTable;
   shop_settings: ShopSettingsTable;
-  gallery_photos: GalleryPhotosTable;
+  media: MediaTable;
+  media_slots: MediaSlotsTable;
 };

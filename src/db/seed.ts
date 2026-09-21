@@ -10,8 +10,8 @@
  * Run: bun run db:seed
  */
 import { getDb, now } from "./client";
-import { photosInSlot } from "../lib/photos";
 import { barbers, services, shop } from "../lib/shop";
+import mediaSeed from "./media.seed.json";
 
 async function seedServices() {
   for (const service of services) {
@@ -24,10 +24,13 @@ async function seedServices() {
         name_vi: service.nameVi,
         name_en: service.nameEn,
         price: service.price,
+        price_max: service.priceMax,
         was_price: service.wasPrice,
         minutes: service.minutes,
         includes_vi: JSON.stringify(service.includesVi),
         includes_en: JSON.stringify(service.includesEn),
+        tagline_vi: service.taglineVi,
+        tagline_en: service.taglineEn,
         is_active: 1,
       })
       .onConflict((oc) =>
@@ -37,15 +40,33 @@ async function seedServices() {
           name_vi: service.nameVi,
           name_en: service.nameEn,
           price: service.price,
+          price_max: service.priceMax,
           was_price: service.wasPrice,
           minutes: service.minutes,
           includes_vi: JSON.stringify(service.includesVi),
           includes_en: JSON.stringify(service.includesEn),
+          tagline_vi: service.taglineVi,
+          tagline_en: service.taglineEn,
+          is_active: 1,
         }),
       )
       .execute();
   }
-  console.info(`  services: ${services.length}`);
+
+  // Anything the shop took off the menu is hidden, not deleted: old bookings
+  // still name it by slug and the admin list can show what it was.
+  const retired = await getDb()
+    .updateTable("services")
+    .set({ is_active: 0 })
+    .where(
+      "slug",
+      "not in",
+      services.map((s) => s.slug),
+    )
+    .returning("slug")
+    .execute();
+
+  console.info(`  services: ${services.length} (${retired.length} retired)`);
 }
 
 async function seedBarbers() {
@@ -91,21 +112,43 @@ async function seedSettings() {
   console.info(`  settings: ${Object.keys(settings).length}`);
 }
 
-async function seedGallery() {
-  const selection = [
-    ...photosInSlot("interior"),
-    ...photosInSlot("detail"),
-    ...photosInSlot("craft").slice(0, 6),
-  ];
+/**
+ * Pictures and clips already in Vercel Blob, as `scripts/import-media.ts`
+ * left them. Insert-only: the shop curates alt text, order and visibility from
+ * the phone, and a re-seed must not undo that. Slots are filled only when the
+ * slot is empty, for the same reason.
+ */
+async function seedMedia() {
+  let inserted = 0;
+  for (const m of mediaSeed.media) {
+    const result = await getDb()
+      .insertInto("media")
+      .values({
+        id: m.id,
+        kind: m.kind as "image" | "video",
+        url: m.url,
+        poster_url: m.poster_url,
+        width: m.width,
+        height: m.height,
+        blur: m.blur,
+        alt: m.alt,
+        bytes: m.bytes,
+        rank: "rank" in m ? m.rank : 0,
+        is_visible: m.is_visible,
+      })
+      .onConflict((oc) => oc.column("id").doNothing())
+      .executeTakeFirst();
+    inserted += Number(result.numInsertedOrUpdatedRows ?? 0);
+  }
 
-  for (const [index, photo] of selection.entries()) {
+  for (const [slot, mediaId] of Object.entries(mediaSeed.slots)) {
     await getDb()
-      .insertInto("gallery_photos")
-      .values({ photo_id: photo.id, rank: index, is_visible: 1 })
-      .onConflict((oc) => oc.column("photo_id").doUpdateSet({ rank: index }))
+      .insertInto("media_slots")
+      .values({ slot, media_id: mediaId })
+      .onConflict((oc) => oc.column("slot").doNothing())
       .execute();
   }
-  console.info(`  gallery: ${selection.length}`);
+  console.info(`  media: ${mediaSeed.media.length} (${inserted} new)`);
 }
 
 /**
@@ -146,7 +189,7 @@ async function main() {
   await seedServices();
   await seedBarbers();
   await seedSettings();
-  await seedGallery();
+  await seedMedia();
   await getDb().destroy();
 }
 

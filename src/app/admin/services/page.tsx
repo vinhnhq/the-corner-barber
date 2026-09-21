@@ -1,14 +1,16 @@
 import { updateService } from "@/app/actions/admin";
+import { AdminSection, PageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getDb } from "@/db/client";
 import { assertAdminEnabled } from "@/lib/admin";
-import { formatVnd } from "@/lib/shop";
+import { formatPrice, SERVICE_GROUPS, type ServiceGroup } from "@/lib/shop";
 
-const GROUP_LABEL: Record<string, string> = {
+const GROUP_LABEL: Record<ServiceGroup, string> = {
   package: "Gói dịch vụ",
-  single: "Dịch vụ lẻ",
-  colour: "Uốn & nhuộm",
+  relax: "Thư giãn",
+  colour: "Nhuộm & tẩy tóc",
+  perm: "Uốn tóc",
 };
 
 export default async function AdminServicesPage() {
@@ -21,43 +23,39 @@ export default async function AdminServicesPage() {
     .orderBy("rank")
     .execute();
 
-  const groups = ["package", "single", "colour"] as const;
-
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-heading text-3xl text-cream">Dịch vụ</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Sửa tên, giá và thời lượng. Thay đổi hiện ngay trên trang chính.
-        </p>
-      </div>
+    <div className="flex flex-col gap-12">
+      <PageHeader
+        title="Dịch vụ"
+        lede="Sửa tên, giá và thời lượng. Để trống “Giá tối đa” nếu giá cố định. Thay đổi hiện ngay trên trang chính."
+      />
 
-      {groups.map((group) => (
-        <section key={group} className="flex flex-col gap-3">
-          <h2 className="label text-[0.68rem] text-brass">{GROUP_LABEL[group]}</h2>
-
+      {SERVICE_GROUPS.map((group) => (
+        <AdminSection key={group} title={GROUP_LABEL[group]}>
           {services
             .filter((s) => s.group_name === group)
             .map((service) => (
               <form
                 key={service.slug}
                 action={updateService}
-                className="panel grid items-end gap-4 p-5 sm:grid-cols-[1.4fr_1.4fr_1fr_0.7fr_auto]"
+                className="surface grid items-end gap-3 p-4 sm:grid-cols-[1.4fr_1.4fr_1fr_1fr_0.7fr_auto]"
               >
                 <input type="hidden" name="slug" value={service.slug} />
 
-                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  Tên (VI)
+                <label className="flex flex-col gap-1.5">
+                  <span className="tag text-dim">Tên (VI)</span>
                   <Input name="nameVi" defaultValue={service.name_vi} required />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  Tên (EN)
+                <label className="flex flex-col gap-1.5">
+                  <span className="tag text-dim">Tên (EN)</span>
                   <Input name="nameEn" defaultValue={service.name_en} required />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  Giá ({formatVnd(service.price)})
+                <label className="flex flex-col gap-1.5">
+                  <span className="tag text-dim">
+                    Giá ({formatPrice({ price: service.price, priceMax: service.price_max })})
+                  </span>
                   <Input
                     name="price"
                     type="number"
@@ -68,8 +66,19 @@ export default async function AdminServicesPage() {
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  Phút
+                <label className="flex flex-col gap-1.5">
+                  <span className="tag text-dim">Giá tối đa</span>
+                  <Input
+                    name="priceMax"
+                    type="number"
+                    min={0}
+                    step={1000}
+                    defaultValue={service.price_max ?? ""}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="tag text-dim">Phút</span>
                   <Input
                     name="minutes"
                     type="number"
@@ -81,8 +90,8 @@ export default async function AdminServicesPage() {
                   />
                 </label>
 
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-4">
+                  <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground sm:min-h-9">
                     <input
                       type="checkbox"
                       name="isActive"
@@ -91,13 +100,13 @@ export default async function AdminServicesPage() {
                     />
                     Hiện
                   </label>
-                  <Button type="submit" size="sm">
+                  <Button type="submit" variant="secondary" size="sm">
                     Lưu
                   </Button>
                 </div>
               </form>
             ))}
-        </section>
+        </AdminSection>
       ))}
     </div>
   );
