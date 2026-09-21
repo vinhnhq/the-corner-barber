@@ -18,7 +18,8 @@ function passwordConfigured(): boolean {
   return Boolean(process.env.ADMIN_PASSWORD);
 }
 
-export function assertAdminEnabled(): void {
+/** The same rule as `assertAdminEnabled`, as a value — for route handlers. */
+export function isAdminEnabled(): boolean {
   // An empty value counts as unset. `.env.example` ships these keys blank so
   // that copying the file into a production environment cannot switch the admin
   // on, and treating "" as "explicitly set" would instead disable the admin for
@@ -27,11 +28,14 @@ export function assertAdminEnabled(): void {
 
   if (process.env.NODE_ENV !== "production") {
     // Development: on unless deliberately switched off.
-    if (explicit === "false") notFound();
-    return;
+    return explicit !== "false";
   }
 
-  if (explicit !== "true" || !passwordConfigured()) notFound();
+  return explicit === "true" && passwordConfigured();
+}
+
+export function assertAdminEnabled(): void {
+  if (!isAdminEnabled()) notFound();
 }
 
 /**

@@ -42,13 +42,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# source photo/video originals (multi-GB, never committed)
+# photo/video originals dropped in for `assets:import` — never committed
 /_source-assets/
+/temp/
 
 # local sqlite database
 /data/
 
-# generated contact sheets
+# scratch space for scripts
 /scratch/
 
 # icon source export — inputs to scripts/process-icons.ts, not shipped

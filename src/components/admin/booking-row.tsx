@@ -39,40 +39,40 @@ export function BookingRow({
   const status = STATUS[booking.status];
 
   return (
-    <li className="panel flex flex-col gap-4 p-5">
+    <li className="surface flex flex-col gap-4 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <p className="flex items-center gap-2 text-cream">
-            <span className="font-medium">{booking.customerName}</span>
-            <span className="font-mono text-xs text-muted-foreground">#{booking.id}</span>
+          <p className="flex items-baseline gap-2">
+            <span className="font-serif text-xl text-cream">{booking.customerName}</span>
+            <span className="tag text-[0.6rem] text-dim tabular-nums">#{booking.id}</span>
           </p>
           <a
             href={`tel:${booking.customerPhone}`}
-            className="flex items-center gap-1.5 font-mono text-sm text-brass transition-colors hover:text-cream"
+            className="flex min-h-11 items-center gap-1.5 font-mono text-sm text-brass tabular-nums transition-colors hover:text-cream sm:min-h-0"
           >
             <Phone className="size-3.5" aria-hidden />
             {booking.customerPhone}
           </a>
         </div>
 
-        <Badge variant="outline" className={cn("shrink-0", status.className)}>
+        <Badge variant="outline" className={cn("tag shrink-0 text-[0.6rem]", status.className)}>
           {status.label}
         </Badge>
       </div>
 
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-xs text-muted-foreground">Dịch vụ</dt>
-          <dd className="text-cream">{serviceName}</dd>
+          <dt className="tag text-[0.6rem] text-dim">Dịch vụ</dt>
+          <dd className="mt-1 text-cream">{serviceName}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Thợ</dt>
-          <dd className="text-cream">{barberName}</dd>
+          <dt className="tag text-[0.6rem] text-dim">Thợ</dt>
+          <dd className="mt-1 text-cream">{barberName}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Thời gian mong muốn</dt>
-          <dd className="font-mono text-cream">
-            {booking.requestedDate} · {booking.requestedTime}
+          <dt className="tag text-[0.6rem] text-dim">Thời gian mong muốn</dt>
+          <dd className="mt-1 font-mono text-cream tabular-nums">
+            {booking.requestedDate} {booking.requestedTime}
           </dd>
         </div>
       </dl>
@@ -84,7 +84,7 @@ export function BookingRow({
       )}
 
       {booking.staffNote && (
-        <p className="border-l-2 border-brass/40 pl-3 text-sm text-brass-dim">
+        <p className="border-l-2 border-brass/40 pl-3 text-sm text-gold">
           Ghi chú tiệm: {booking.staffNote}
         </p>
       )}
@@ -95,20 +95,20 @@ export function BookingRow({
           className="flex flex-wrap items-end gap-3 border-t border-border/60 pt-4"
         >
           <input type="hidden" name="id" value={booking.id} />
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            Ngày mới
+          <label className="flex flex-col gap-1.5">
+            <span className="tag text-dim">Ngày mới</span>
             <Input type="date" name="date" defaultValue={booking.requestedDate} required />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            Giờ mới
+          <label className="flex flex-col gap-1.5">
+            <span className="tag text-dim">Giờ mới</span>
             <Input type="time" name="time" defaultValue={booking.requestedTime} required />
           </label>
-          <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs text-muted-foreground">
-            Ghi chú
+          <label className="flex min-w-40 flex-1 flex-col gap-1.5">
+            <span className="tag text-dim">Ghi chú</span>
             <Input name="staffNote" placeholder="Đã gọi khách, dời sang…" />
           </label>
           <div className="flex gap-2">
-            <Button type="submit" size="sm">
+            <Button type="submit" size="sm" variant="secondary">
               Lưu
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setRescheduling(false)}>
@@ -119,7 +119,12 @@ export function BookingRow({
       ) : (
         <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
           {booking.status !== "confirmed" && (
-            <StatusButton id={booking.id} status="confirmed" icon={<Check className="size-3.5" />}>
+            <StatusButton
+              id={booking.id}
+              status="confirmed"
+              variant="default"
+              icon={<Check className="size-3.5" />}
+            >
               Xác nhận
             </StatusButton>
           )}
@@ -171,7 +176,7 @@ function StatusButton({
   status: BookingStatus;
   icon: ReactNode;
   children: ReactNode;
-  variant?: "secondary" | "outline" | "ghost";
+  variant?: "default" | "secondary" | "outline" | "ghost";
 }) {
   return (
     <form action={setBookingStatus}>

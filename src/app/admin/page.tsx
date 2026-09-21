@@ -1,4 +1,5 @@
 import { BookingRow } from "@/components/admin/booking-row";
+import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import type { BookingStatus } from "@/db/schema";
 import { assertAdminEnabled } from "@/lib/admin";
@@ -34,28 +35,21 @@ export default async function AdminBookingsPage({ searchParams }: PageProps<"/ad
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-heading text-3xl text-cream">Lịch hẹn</h1>
-        <div className="flex items-center gap-2">
-          {/* Staff need to know whether confirming will actually reach the
-              calendar, rather than discovering later that it never did. */}
-          <Badge
-            variant="outline"
-            className={
-              calendarIsConfigured()
-                ? "border-success/30 bg-success/15 text-success"
-                : "border-border text-muted-foreground"
-            }
-          >
-            {calendarIsConfigured()
-              ? "Google Calendar: đang bật"
-              : "Google Calendar: chưa cấu hình"}
-          </Badge>
-          <Badge variant="secondary">
-            {counts.pending} chờ xác nhận / {total} tổng
-          </Badge>
-        </div>
-      </div>
+      <PageHeader title="Lịch hẹn" lede={`${counts.pending} chờ xác nhận, ${total} tổng cộng.`}>
+        {/* Staff need to know whether confirming will actually reach the
+            calendar, rather than discovering later that it never did. */}
+        <Badge
+          variant="outline"
+          className={cn(
+            "tag text-[0.6rem]",
+            calendarIsConfigured()
+              ? "border-success/30 bg-success/15 text-success"
+              : "border-border text-muted-foreground",
+          )}
+        >
+          {calendarIsConfigured() ? "Google Calendar: đang bật" : "Google Calendar: chưa cấu hình"}
+        </Badge>
+      </PageHeader>
 
       <nav className="flex flex-wrap gap-2" aria-label="Lọc theo trạng thái">
         {FILTERS.map((value) => {
@@ -66,7 +60,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps<"/ad
               key={value}
               href={value === "all" ? "/admin" : `/admin?status=${value}`}
               className={cn(
-                "rounded-sm border px-3 py-1.5 text-xs transition-colors",
+                "tag inline-flex min-h-11 items-center border px-3 text-[0.6rem] transition-colors sm:min-h-9",
                 active
                   ? "border-brass/60 bg-brass/10 text-brass"
                   : "border-border text-muted-foreground hover:text-cream",
@@ -79,7 +73,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps<"/ad
       </nav>
 
       {bookings.length === 0 ? (
-        <p className="panel px-6 py-16 text-center text-sm text-muted-foreground">
+        <p className="surface px-6 py-16 text-center text-sm text-muted-foreground">
           Chưa có yêu cầu nào.
         </p>
       ) : (
