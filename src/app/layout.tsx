@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Be_Vietnam_Pro, Cinzel, Cormorant_Garamond, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, IBM_Plex_Mono, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { getLocale } from "@/lib/i18n/server";
 import { shop } from "@/lib/shop";
@@ -7,38 +7,32 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 
 /**
- * The engraved caps on the shopfront and the gold wall sign.
- *
- * Cinzel publishes `latin` and `latin-ext` only — there is no Vietnamese
- * subset, so anything set in it loses every diacritic to a fallback face
- * mid-word. It is therefore reserved for the brand lockup ("The Corner",
- * "Barbershop", "Est. 2026"), which is Latin. Interface copy uses `.label`,
- * set in the body face.
+ * Three faces with strict roles — the contrast between them is the look:
+ * Cormorant for display (with one italic phrase in gold per heading), IBM
+ * Plex Mono in tracked caps for every label, price and piece of meta, and
+ * Inter for reading. All three carry the Vietnamese range, so tone marks sit
+ * correctly at every size.
  */
-const display = Cinzel({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  display: "swap",
-});
-
-/** Headings. Carries full Vietnamese diacritics. */
-const heading = Cormorant_Garamond({
-  variable: "--font-heading",
+const serif = Cormorant_Garamond({
+  variable: "--font-serif",
   subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
-/** Body copy — drawn for Vietnamese, so the tone marks sit correctly. */
-const body = Be_Vietnam_Pro({
-  variable: "--font-body",
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono",
   subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"], display: "swap" });
+const sans = Inter({
+  variable: "--font-sans",
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   // No domain yet — this keeps Open Graph image URLs absolute in every
@@ -46,20 +40,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: `${shop.name} ${shop.suffix} — ${shop.address.street}`,
-    template: `%s · ${shop.name} ${shop.suffix}`,
+    template: `%s — ${shop.name} ${shop.suffix}`,
   },
   description:
-    "Tiệm cắt tóc cổ điển tại TP. Hồ Chí Minh — ghế da, gương gỗ, đèn đồng. Đặt lịch cắt tóc, cạo mặt, gội thư giãn.",
+    "Không ồn ào. Không vội vã. Một không gian nơi người đàn ông tìm lại sự chỉn chu của mình — đặt lịch cắt tóc tại TP. Hồ Chí Minh.",
   openGraph: {
     title: `${shop.name} ${shop.suffix}`,
-    description: "Tiệm cắt tóc cổ điển tại TP. Hồ Chí Minh.",
-    images: ["/photos/hero-room.jpg"],
+    description: "Không ồn ào. Không vội vã.",
+    // The Open Graph card. Media lives in Blob; this is the room shot by id.
+    images: ["https://ym60qszluhzb8wqs.public.blob.vercel-storage.com/media/hero-room.jpg"],
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0D100A",
+  themeColor: "#0d0d0f",
   colorScheme: "dark",
 };
 
@@ -69,13 +64,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
-      className={cn(
-        "h-full scroll-smooth",
-        display.variable,
-        heading.variable,
-        body.variable,
-        mono.variable,
-      )}
+      className={cn("h-full scroll-smooth", serif.variable, mono.variable, sans.variable)}
     >
       <body className="flex min-h-full flex-col">
         {children}

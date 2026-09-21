@@ -3,12 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { fill, type Dictionary } from "@/lib/i18n/dictionaries";
-import type { Photo } from "@/lib/photos";
+import { stillOf, type Media } from "@/lib/media";
 import { cn } from "@/lib/utils";
-
-type GalleryPhoto = Photo & { id: string };
 
 /** The widest breakpoint. Two columns divides into it, so one trim serves both. */
 const GRID_COLUMNS = 4;
@@ -20,7 +18,7 @@ const GRID_COLUMNS = 4;
  * focus trap, the inert background and Escape-to-close for free rather than
  * reimplementing them. Arrow keys step through the set.
  */
-export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictionary }) {
+export function GalleryGrid({ photos, t }: { photos: Media[]; t: Dictionary }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState<number | null>(null);
   const open = index !== null;
@@ -85,7 +83,9 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
         Satisfying 4 columns satisfies 2 as well, so one trim covers both
         breakpoints.
       */}
-      <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* One tile per row on a phone — each picture gets the full width and a
+          thumb can pick it; the mosaic starts at `sm`. */}
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {shown.map((photo, i) => (
           <li
             key={photo.id}
@@ -94,16 +94,19 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
             // it has no height of its own — and at two columns it spans both
             // columns of the first two rows, leaving no square tile there to
             // give those rows height. It collapsed to 12px on phones.
-            className={cn("relative aspect-square", i === 0 && "col-span-2 row-span-2")}
+            className={cn(
+              "relative aspect-[4/3] sm:aspect-square",
+              i === 0 && "sm:col-span-2 sm:row-span-2",
+            )}
           >
             <button
               type="button"
               onClick={() => setIndex(i)}
-              aria-label={`${t.gallery.open}: ${photo.alt}`}
-              className="group panel absolute inset-0 cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:ring-brass focus-visible:outline-none"
+              aria-label={`${t.space.open}: ${photo.alt}`}
+              className="group absolute inset-0 cursor-pointer overflow-hidden border border-border bg-card focus-visible:ring-2 focus-visible:ring-brass focus-visible:outline-none"
             >
               <Image
-                src={photo.src}
+                src={stillOf(photo)}
                 alt={photo.alt}
                 fill
                 placeholder="blur"
@@ -112,6 +115,13 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
               />
               <span className="absolute inset-0 bg-background/10 transition-colors duration-500 group-hover:bg-transparent" />
+              {photo.kind === "video" && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-background/70 text-cream">
+                    <Play className="ml-0.5 size-5" aria-hidden />
+                  </span>
+                </span>
+              )}
             </button>
           </li>
         ))}
@@ -127,20 +137,20 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
         createPortal(
           <dialog
             ref={dialogRef}
-            aria-label={t.gallery.title}
+            aria-label={t.space.title}
             onClose={close}
             className="m-0 h-full max-h-none w-full max-w-none bg-background/97 text-foreground backdrop:bg-background/80"
           >
             {current && (
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between px-5 py-4 sm:px-8">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {fill(t.gallery.counter, { current: (index ?? 0) + 1, total: shown.length })}
+                  <span className="tag text-dim tabular-nums">
+                    {fill(t.space.counter, { current: (index ?? 0) + 1, total: shown.length })}
                   </span>
                   <button
                     type="button"
                     onClick={close}
-                    aria-label={t.gallery.close}
+                    aria-label={t.space.close}
                     className="cursor-pointer p-2 text-cream transition-colors hover:text-brass focus-visible:ring-2 focus-visible:ring-brass focus-visible:outline-none"
                   >
                     <X className="size-5" />
@@ -152,23 +162,41 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
                     mixes portrait and landscape frames that all have to fit the
                     same box. */}
                 <div className="relative min-h-0 flex-1 px-4 pb-4">
-                  <Image
-                    key={current.id}
-                    src={current.src}
-                    alt={current.alt}
-                    fill
-                    placeholder="blur"
-                    blurDataURL={current.blur}
-                    sizes="90vw"
-                    className="object-contain"
-                  />
+                  {current.kind === "video" ? (
+                    // Keyed so stepping to another clip remounts the player
+                    // instead of swapping the source under a playing one.
+                    <video
+                      key={current.id}
+                      src={current.url}
+                      poster={current.posterUrl ?? undefined}
+                      controls
+                      autoPlay
+                      playsInline
+                      preload="metadata"
+                      className="size-full object-contain"
+                    >
+                      {/* The clips are ambience with no speech, so there is nothing to caption. */}
+                      <track kind="captions" />
+                    </video>
+                  ) : (
+                    <Image
+                      key={current.id}
+                      src={current.url}
+                      alt={current.alt}
+                      fill
+                      placeholder="blur"
+                      blurDataURL={current.blur}
+                      sizes="90vw"
+                      className="object-contain"
+                    />
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-4 px-5 pb-6 sm:px-8">
                   <button
                     type="button"
                     onClick={() => step(-1)}
-                    aria-label={t.gallery.prev}
+                    aria-label={t.space.prev}
                     className="cursor-pointer p-3 text-cream transition-colors hover:text-brass focus-visible:ring-2 focus-visible:ring-brass focus-visible:outline-none"
                   >
                     <ChevronLeft className="size-6" />
@@ -181,7 +209,7 @@ export function GalleryGrid({ photos, t }: { photos: GalleryPhoto[]; t: Dictiona
                   <button
                     type="button"
                     onClick={() => step(1)}
-                    aria-label={t.gallery.next}
+                    aria-label={t.space.next}
                     className="cursor-pointer p-3 text-cream transition-colors hover:text-brass focus-visible:ring-2 focus-visible:ring-brass focus-visible:outline-none"
                   >
                     <ChevronRight className="size-6" />

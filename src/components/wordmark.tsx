@@ -11,8 +11,9 @@ type WordmarkProps = {
 };
 
 /**
- * The shop's name, set the way it is cut into the shopfront glass: engraved
- * caps, a brass rule, and the founding year beneath.
+ * The shop's name in tracked serif caps over a mono line, with the founding
+ * year beneath in the `full` variant — the same two faces as the page, so the
+ * lockup reads as part of it.
  *
  * The mark is decorative — `alt=""` — because the name is right next to it in
  * real text. Announcing "barber pole" before "The Corner" would only add noise
@@ -20,21 +21,16 @@ type WordmarkProps = {
  */
 export function Wordmark({ className, variant = "compact", withMark = false }: WordmarkProps) {
   const lockup = (
-    <span className="inline-flex flex-col items-center leading-none">
-      <span className="wordmark text-[1.05em] font-semibold text-cream">{shop.name}</span>
-      <span
-        className={cn(
-          "wordmark mt-[0.35em] text-[0.42em] font-normal text-brass",
-          variant === "full" && "text-[0.4em]",
-        )}
-      >
+    <span className="inline-flex flex-col items-center leading-none uppercase">
+      <span className="font-serif text-[1em] font-semibold tracking-[0.2em] text-cream">
+        {shop.name}
+      </span>
+      <span className="mt-[0.45em] font-mono text-[0.36em] tracking-[0.34em] text-brass">
         {shop.suffix}
       </span>
       {variant === "full" && (
-        <span className="mt-[0.55em] flex items-center gap-[0.5em] text-[0.34em] text-brass-dim">
-          <span className="h-px w-[1.6em] bg-brass-dim" />
-          <span className="wordmark">Est. {shop.established}</span>
-          <span className="h-px w-[1.6em] bg-brass-dim" />
+        <span className="mt-[0.6em] font-mono text-[0.32em] tracking-[0.34em] text-dim">
+          Est. {shop.established}
         </span>
       )}
     </span>

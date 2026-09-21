@@ -5,31 +5,27 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 /**
  * The hero background loop.
  *
- * The encoded clip is ~4.6 MB, far too much to push at every visitor, so the
- * `<source>` is attached only when the visit passes three tests: a viewport
- * wide enough for the loop to be worth seeing, no `prefers-reduced-motion`, and
- * no `saveData`/2g connection hint. Everyone else keeps the poster still, which
- * is the same frame — so the layout and the first paint are identical either
- * way.
+ * The clip is tens of MB, too much to push at everyone, so the `<source>` is
+ * attached only when the visit passes two tests: no `prefers-reduced-motion`,
+ * and no `saveData`/2g connection hint. Phones do get it — the shop's clip is
+ * portrait and the hero is the first thing a visitor sees — but anyone who has
+ * asked for less keeps the poster still, which is the same frame, so the
+ * layout and the first paint are identical either way.
  *
  * The decision goes through `useSyncExternalStore` rather than an effect: the
  * server snapshot is "no video", the client subscribes to the media queries,
  * and React reconciles the difference without a cascading render.
  */
 
-const WIDE = "(min-width: 768px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
 function subscribe(onChange: () => void): () => void {
-  const queries = [window.matchMedia(WIDE), window.matchMedia(REDUCED)];
-  for (const query of queries) query.addEventListener("change", onChange);
-  return () => {
-    for (const query of queries) query.removeEventListener("change", onChange);
-  };
+  const query = window.matchMedia(REDUCED);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
 }
 
 function shouldPlay(): boolean {
-  if (!window.matchMedia(WIDE).matches) return false;
   if (window.matchMedia(REDUCED).matches) return false;
 
   // `connection` is Chromium-only; absence just means "no reason to hold back".
@@ -45,7 +41,7 @@ function shouldPlay(): boolean {
   return true;
 }
 
-export function HeroVideo({ poster, src }: { poster: string; src: string }) {
+export function HeroVideo({ poster, src }: { poster: string | undefined; src: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const active = useSyncExternalStore(subscribe, shouldPlay, () => false);
 
@@ -69,7 +65,7 @@ export function HeroVideo({ poster, src }: { poster: string; src: string }) {
       preload="none"
       aria-hidden="true"
       tabIndex={-1}
-      className="size-full object-cover"
+      className="size-full object-cover object-center"
     >
       {active && <source src={src} type="video/mp4" />}
     </video>

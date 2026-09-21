@@ -36,7 +36,7 @@ export function LocaleSwitcher({ current, className }: { current: Locale; classN
   }, [pending]);
 
   return (
-    <nav className={cn("flex items-center gap-px text-[0.7rem]", className)} aria-label="Language">
+    <nav className={cn("flex items-center gap-px", className)} aria-label="Language">
       {LOCALES.map((locale) => {
         const active = locale === current;
         return (
@@ -51,7 +51,7 @@ export function LocaleSwitcher({ current, className }: { current: Locale; classN
             className={cn(
               // A comfortable target on a phone, back to compact from sm upwards so the
               // desktop header keeps its height.
-              "label min-h-11 min-w-11 cursor-pointer px-2 text-center transition-colors",
+              "tag min-h-11 min-w-11 cursor-pointer px-2 text-center transition-colors",
               "sm:min-h-0 sm:min-w-9 sm:py-1",
               active ? "text-brass" : "text-muted-foreground hover:text-cream",
               "disabled:cursor-default",

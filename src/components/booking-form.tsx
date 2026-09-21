@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fill, type Dictionary, type Locale } from "@/lib/i18n/dictionaries";
-import { formatVnd, shop, type Service } from "@/lib/shop";
+import { formatPrice, shop, type Service } from "@/lib/shop";
 import { slotTimes, type DateOption } from "@/lib/slots";
 import { cn } from "@/lib/utils";
 
@@ -110,18 +110,18 @@ export function BookingForm({ t, locale, services, barbers, today, dates }: Book
 
   if (state?.ok) {
     return (
-      <div className="panel flex flex-col items-center gap-4 bg-card/95 px-6 py-16 text-center backdrop-blur-md">
+      <div className="surface flex flex-col items-center gap-4 px-6 py-16 text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-brass/15 text-brass">
           <Check className="size-6" aria-hidden />
         </span>
-        <h3 className="font-heading text-2xl text-cream">{t.booking.successTitle}</h3>
+        <h3 className="text-2xl text-cream">{t.booking.successTitle}</h3>
         <p className="max-w-sm text-sm text-muted-foreground">
           {fill(t.booking.successBody, { phone: state.phone })}
         </p>
 
         {state.appointment && (
-          <div className="mt-4 flex flex-col items-center gap-3 border-t border-border/60 pt-6">
-            <p className="label text-[0.62rem] text-brass">{t.booking.addToCalendar}</p>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <p className="tag text-brass">{t.booking.addToCalendar}</p>
             <AddToCalendar appointment={state.appointment} t={t} />
           </div>
         )}
@@ -132,9 +132,9 @@ export function BookingForm({ t, locale, services, barbers, today, dates }: Book
   return (
     <form
       action={action}
-      // Opaque over the photographic backdrop — the translucent `panel` default
-      // leaves the labels competing with the picture behind them.
-      className="panel flex flex-col gap-6 bg-card/95 p-6 backdrop-blur-md sm:p-8"
+      // Opaque over the photographic backdrop, so the labels never compete
+      // with the picture behind them.
+      className="surface flex flex-col gap-8 p-6 sm:p-8"
       noValidate
     >
       {/* Honeypot: off-screen rather than display:none, which some bots skip. */}
@@ -143,137 +143,158 @@ export function BookingForm({ t, locale, services, barbers, today, dates }: Book
         <input id={`${formId}-website`} name="website" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field id={`${formId}-name`} label={t.booking.name} error={message("name")}>
-          <Input
-            id={`${formId}-name`}
-            name="name"
-            required
-            autoComplete="name"
-            className={FIELD_HEIGHT}
-            placeholder={t.booking.namePlaceholder}
-            aria-invalid={message("name") !== undefined}
-          />
-        </Field>
-
-        <Field id={`${formId}-phone`} label={t.booking.phone} error={message("phone")}>
-          <Input
-            id={`${formId}-phone`}
-            name="phone"
-            type="tel"
-            required
-            inputMode="tel"
-            autoComplete="tel"
-            className={FIELD_HEIGHT}
-            placeholder={t.booking.phonePlaceholder}
-            aria-invalid={message("phone") !== undefined}
-          />
-        </Field>
-      </div>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        {/* Native selects, not the shadcn Select: this form has to work the
+      <Step number={1} title={t.booking.stepService}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Native selects, not the shadcn Select: this form has to work the
             moment it paints, and a phone's own picker is faster to use. */}
-        <Field id={`${formId}-service`} label={t.booking.service} error={message("service")}>
-          <NativeSelect
-            id={`${formId}-service`}
-            name="service"
-            required
-            defaultValue=""
-            className={FIELD_HEIGHT}
-          >
-            <option value="" disabled>
-              {t.booking.servicePlaceholder}
-            </option>
-            {services.map((service) => (
-              <option key={service.slug} value={service.slug}>
-                {(locale === "vi" ? service.nameVi : service.nameEn) +
-                  ` — ${formatVnd(service.price)}`}
+          <Field id={`${formId}-service`} label={t.booking.service} error={message("service")}>
+            <NativeSelect
+              id={`${formId}-service`}
+              name="service"
+              required
+              defaultValue=""
+              className={FIELD_HEIGHT}
+            >
+              <option value="" disabled>
+                {t.booking.servicePlaceholder}
               </option>
-            ))}
-          </NativeSelect>
-        </Field>
+              {services.map((service) => (
+                <option key={service.slug} value={service.slug}>
+                  {(locale === "vi" ? service.nameVi : service.nameEn) +
+                    ` — ${formatPrice(service)}`}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
 
-        <Field id={`${formId}-barber`} label={t.booking.barber}>
-          <NativeSelect
-            id={`${formId}-barber`}
-            name="barber"
-            value={barber}
-            onChange={(e) => setBarber(e.target.value)}
-            className={FIELD_HEIGHT}
-          >
-            {barbers.map((barber) => (
-              <option key={barber.slug} value={barber.slug}>
-                {locale === "vi" ? barber.nameVi : barber.nameEn}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-      </div>
+          <Field id={`${formId}-barber`} label={t.booking.barber}>
+            <NativeSelect
+              id={`${formId}-barber`}
+              name="barber"
+              value={barber}
+              onChange={(e) => setBarber(e.target.value)}
+              className={FIELD_HEIGHT}
+            >
+              {barbers.map((barber) => (
+                <option key={barber.slug} value={barber.slug}>
+                  {locale === "vi" ? barber.nameVi : barber.nameEn}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+        </div>
+      </Step>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {/* A list of days, not `<input type="date">`. See `bookableDates` —
+      <Step number={2} title={t.booking.stepWhen}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* A list of days, not `<input type="date">`. See `bookableDates` —
             the native control renders no calendar indicator on iOS Safari, so
             it reads as a dead text box beside the fields that have one. */}
-        <Field id={`${formId}-date`} label={t.booking.date} error={message("date")}>
-          <NativeSelect
-            id={`${formId}-date`}
-            name="date"
-            required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            aria-invalid={message("date") !== undefined}
-            className={FIELD_HEIGHT}
-          >
-            {dates.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-
-        <Field
-          id={`${formId}-time`}
-          label={t.booking.time}
-          error={message("time")}
-          hint={allTaken ? t.booking.dayFull : undefined}
-        >
-          <NativeSelect
-            id={`${formId}-time`}
-            name="time"
-            required
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className={FIELD_HEIGHT}
-          >
-            {slots.map((slot) => {
-              const taken = busy.includes(slot);
-              return (
-                <option key={slot} value={slot} disabled={taken}>
-                  {taken ? `${slot} — ${t.booking.slotTaken}` : slot}
+          <Field id={`${formId}-date`} label={t.booking.date} error={message("date")}>
+            <NativeSelect
+              id={`${formId}-date`}
+              name="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              aria-invalid={message("date") !== undefined}
+              className={FIELD_HEIGHT}
+            >
+              {dates.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
-              );
-            })}
-          </NativeSelect>
-        </Field>
-      </div>
+              ))}
+            </NativeSelect>
+          </Field>
 
-      <Field id={`${formId}-note`} label={t.booking.note}>
-        <Textarea
-          id={`${formId}-note`}
-          name="note"
-          rows={3}
-          maxLength={500}
-          placeholder={t.booking.notePlaceholder}
-        />
-      </Field>
+          <Field
+            id={`${formId}-time`}
+            label={t.booking.time}
+            error={message("time")}
+            hint={allTaken ? t.booking.dayFull : undefined}
+          >
+            <NativeSelect
+              id={`${formId}-time`}
+              name="time"
+              required
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className={FIELD_HEIGHT}
+            >
+              {slots.map((slot) => {
+                const taken = busy.includes(slot);
+                return (
+                  <option key={slot} value={slot} disabled={taken}>
+                    {taken ? `${slot} — ${t.booking.slotTaken}` : slot}
+                  </option>
+                );
+              })}
+            </NativeSelect>
+          </Field>
+        </div>
+      </Step>
+
+      <Step number={3} title={t.booking.stepDetails}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field id={`${formId}-name`} label={t.booking.name} error={message("name")}>
+            <Input
+              id={`${formId}-name`}
+              name="name"
+              required
+              autoComplete="name"
+              className={FIELD_HEIGHT}
+              placeholder={t.booking.namePlaceholder}
+              aria-invalid={message("name") !== undefined}
+            />
+          </Field>
+
+          <Field id={`${formId}-phone`} label={t.booking.phone} error={message("phone")}>
+            <Input
+              id={`${formId}-phone`}
+              name="phone"
+              type="tel"
+              required
+              inputMode="tel"
+              autoComplete="tel"
+              className={FIELD_HEIGHT}
+              placeholder={t.booking.phonePlaceholder}
+              aria-invalid={message("phone") !== undefined}
+            />
+          </Field>
+        </div>
+
+        <Field id={`${formId}-note`} label={t.booking.note}>
+          <Textarea
+            id={`${formId}-note`}
+            name="note"
+            rows={3}
+            maxLength={500}
+            placeholder={t.booking.notePlaceholder}
+          />
+        </Field>
+      </Step>
 
       <Button type="submit" size="lg" disabled={pending} className="mt-1">
         {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
         {pending ? t.booking.submitting : t.booking.submit}
       </Button>
     </form>
+  );
+}
+
+/** One of the three numbered groups the shop's copy lays the form out in. */
+function Step({ number, title, children }: { number: number; title: string; children: ReactNode }) {
+  return (
+    <fieldset className="flex flex-col gap-5">
+      <legend className="mb-5 flex items-center gap-3">
+        <span className="font-mono text-sm text-brass tabular-nums" aria-hidden>
+          {String(number).padStart(2, "0")}
+        </span>
+        <span className="font-serif text-2xl text-cream">{title}</span>
+      </legend>
+      {children}
+    </fieldset>
   );
 }
 
@@ -292,7 +313,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id} className="label text-[0.62rem] text-muted-foreground">
+      <Label htmlFor={id} className="tag text-muted-foreground">
         {label}
       </Label>
       {children}

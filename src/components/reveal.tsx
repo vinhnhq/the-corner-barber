@@ -31,19 +31,3 @@ export function Reveal({ children, className, delay = 0, as: Tag = "div" }: Reve
     </Tag>
   );
 }
-
-/**
- * The brass hairline between sections, with a diamond at its centre — the
- * divider used on the shop's own price board.
- */
-export function BrassRule({ className, label }: { className?: string; label?: ReactNode }) {
-  return (
-    <div className={cn("brass-rule", className)} aria-hidden={label ? undefined : true}>
-      {label ? (
-        <span className="label text-[0.7rem] text-brass-dim">{label}</span>
-      ) : (
-        <span className="block size-1.5 rotate-45 bg-brass-dim" />
-      )}
-    </div>
-  );
-}

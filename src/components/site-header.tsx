@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type SiteHeaderProps = { locale: Locale; t: Dictionary };
 
-const SECTIONS = ["services", "gallery", "barbers", "about", "visit"] as const;
+const SECTIONS = ["services", "space", "contact"] as const;
 
 export function SiteHeader({ locale, t }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
@@ -41,7 +41,7 @@ export function SiteHeader({ locale, t }: SiteHeaderProps) {
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-colors duration-500",
         scrolled
-          ? "border-b border-border/70 bg-background/85 backdrop-blur-md"
+          ? "border-b border-border bg-background/85 backdrop-blur-md"
           : "border-b border-transparent",
       )}
     >
@@ -55,7 +55,7 @@ export function SiteHeader({ locale, t }: SiteHeaderProps) {
             <a
               key={id}
               href={`#${id}`}
-              className="label text-[0.72rem] text-muted-foreground transition-colors hover:text-cream"
+              className="tag text-muted-foreground transition-colors hover:text-cream"
             >
               {t.nav[id]}
             </a>
@@ -76,7 +76,7 @@ export function SiteHeader({ locale, t }: SiteHeaderProps) {
           <a
             href={`tel:${shop.phone}`}
             className="p-3 text-brass transition-colors hover:text-cream sm:hidden"
-            aria-label={`${t.visit.call} ${shop.phoneDisplay}`}
+            aria-label={`${t.contact.phone} ${shop.phoneDisplay}`}
           >
             <Phone className="size-5" />
           </a>
@@ -99,20 +99,20 @@ export function SiteHeader({ locale, t }: SiteHeaderProps) {
       {open && (
         <div
           id="mobile-nav"
-          className="border-t border-border/70 bg-background/97 backdrop-blur-md lg:hidden"
+          className="border-t border-border bg-background/97 backdrop-blur-md lg:hidden"
         >
-          <nav className="mx-auto flex max-w-7xl flex-col px-5 py-4 sm:px-8" aria-label="Chính">
+          <nav className="mx-auto flex max-w-7xl flex-col px-5 py-2 sm:px-8" aria-label="Chính">
             {SECTIONS.map((id) => (
               <a
                 key={id}
                 href={`#${id}`}
                 onClick={() => setOpen(false)}
-                className="label border-b border-border/50 py-4 text-sm text-muted-foreground transition-colors hover:text-cream"
+                className="tag border-b border-border py-4 text-muted-foreground transition-colors hover:text-cream"
               >
                 {t.nav[id]}
               </a>
             ))}
-            <div className="flex items-center justify-between pt-5">
+            <div className="flex items-center justify-between pt-5 pb-3">
               <LocaleSwitcher current={locale} />
               <Button asChild size="sm" className="min-w-[5.5rem]">
                 <a href="#booking" onClick={() => setOpen(false)}>
