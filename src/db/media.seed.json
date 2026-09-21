@@ -3904,11 +3904,11 @@
   ],
   "slots": {
     "hero": "hero-cut",
-    "package-1": "craft-cut-window",
-    "package-2": "craft-style",
+    "package-1": "craft-barber-work",
+    "package-2": "craft-wash",
     "package-3": "craft-nails",
-    "about-1": "detail-est-sign",
-    "about-2": "detail-carving",
-    "booking": "hero-stations"
+    "about-1": "t-img-5847",
+    "about-2": "interior-lounge-arch",
+    "booking": "interior-stations"
   }
 }
